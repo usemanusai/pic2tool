@@ -27,6 +27,7 @@ The **Automated Development Recorder** is a powerful Windows 11 desktop applicat
 - **🎯 Intelligent Output Selection**: Automatically determines whether to create simple scripts or complex applications
 - **🛡️ Privacy-First Design**: All processing done locally, no data transmitted to third parties
 - **📊 Real-time Progress Tracking**: Visual feedback during recording and processing phases
+- **🚀 Automated Setup System**: One-command setup with environment validation and troubleshooting
 
 ### 🎯 Use Cases
 
@@ -211,7 +212,49 @@ graph TD
 
 ## 📦 Installation and Setup
 
-### Prerequisites Installation
+### 🚀 Automated Setup (Recommended)
+
+**Get started in minutes with our automated setup system:**
+
+```bash
+# Clone the repository
+git clone https://github.com/usemanusai/pic2tool.git
+cd pic2tool
+
+# Run the automated setup - handles everything!
+npm run setup
+```
+
+The setup script will:
+- ✅ Validate your environment (Node.js 18+, Windows 11, FFmpeg)
+- ✅ Install all dependencies automatically
+- ✅ Guide you through API key configuration
+- ✅ Test your API keys with real calls
+- ✅ Verify the build system works
+- ✅ Provide troubleshooting if issues arise
+
+**That's it!** The setup script handles everything automatically.
+
+### ⚡ Quick Environment Check
+
+Want to quickly check if your system is ready?
+
+```bash
+npm run validate
+```
+
+This runs a fast validation of your environment without full setup.
+
+### 📚 Setup Documentation
+
+- **[QUICK_START.md](QUICK_START.md)** - One-command setup guide
+- **[SETUP.md](SETUP.md)** - Detailed setup and troubleshooting
+
+### 🔧 Manual Setup (Alternative)
+
+If you prefer manual setup or the automated setup fails:
+
+#### Prerequisites Installation
 
 1. **Install Node.js 18+**
    ```bash
@@ -233,12 +276,12 @@ graph TD
    ffmpeg -version
    ```
 
-### Application Installation
+#### Application Installation
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/your-username/automated-development-recorder.git
-   cd automated-development-recorder
+   git clone https://github.com/usemanusai/pic2tool.git
+   cd pic2tool
    ```
 
 2. **Install Dependencies**
@@ -252,7 +295,7 @@ graph TD
    npm run build
    ```
 
-### API Key Configuration
+#### API Key Configuration
 
 1. **Launch the Application**
    ```bash
@@ -342,9 +385,19 @@ graph TD
 
 ### Development Setup
 
+**Recommended: Use the automated setup**
+```bash
+# Complete development environment setup
+npm run setup
+```
+
+**Manual development setup:**
 ```bash
 # Install dependencies
 npm install
+
+# Validate environment
+npm run validate
 
 # Start development server
 npm run dev
@@ -406,11 +459,40 @@ release/               # Distribution packages
 
 ## 🔍 Troubleshooting
 
+### 🚀 Automated Troubleshooting
+
+**First, try the automated setup system:**
+```bash
+# The setup script provides detailed troubleshooting
+npm run setup
+```
+
+**For quick environment diagnosis:**
+```bash
+# Fast validation with specific guidance
+npm run validate
+```
+
+The setup system automatically:
+- ✅ Diagnoses common issues
+- ✅ Provides specific solutions
+- ✅ Tests your configuration
+- ✅ Offers step-by-step fixes
+
+### 📚 Detailed Troubleshooting
+
+For comprehensive troubleshooting guidance, see:
+- **[SETUP.md](SETUP.md)** - Complete troubleshooting guide
+- **[QUICK_START.md](QUICK_START.md)** - Common issues and solutions
+
 ### Common Issues
 
 #### FFmpeg Not Found
 ```bash
-# Verify FFmpeg installation
+# Use automated detection
+npm run validate  # Shows FFmpeg status
+
+# Manual verification
 ffmpeg -version
 
 # Add to PATH or place executable in project root
@@ -424,6 +506,10 @@ ffmpeg -version
 
 #### API Errors
 ```bash
+# The setup script tests API keys automatically
+npm run setup
+
+# Manual checks
 # Check API key validity
 # Verify API quotas and rate limits
 # Monitor network connectivity
@@ -432,6 +518,10 @@ ffmpeg -version
 
 #### Build Errors
 ```bash
+# Let the setup script diagnose and fix
+npm run setup
+
+# Manual troubleshooting
 # Clear dependencies and reinstall
 rm -rf node_modules package-lock.json
 npm install
@@ -487,14 +577,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Getting Help
 
-1. **Documentation**: Check this README and [Development Guide](DEVELOPMENT.md)
-2. **Issues**: Search existing [GitHub Issues](https://github.com/your-username/automated-development-recorder/issues)
-3. **New Issue**: Create a detailed issue report with logs and steps to reproduce
+1. **Automated Diagnosis**: Run `npm run setup` or `npm run validate` for automatic troubleshooting
+2. **Documentation**: Check [SETUP.md](SETUP.md), [QUICK_START.md](QUICK_START.md), and [DEVELOPMENT.md](DEVELOPMENT.md)
+3. **Setup Logs**: Review `setup-log.txt` and `setup-report.json` for detailed diagnostic information
+4. **Issues**: Search existing [GitHub Issues](https://github.com/usemanusai/pic2tool/issues)
+5. **New Issue**: Create a detailed issue report with setup logs and steps to reproduce
 
 ### Community
 
-- **Discussions**: Join our [GitHub Discussions](https://github.com/your-username/automated-development-recorder/discussions)
+- **Discussions**: Join our [GitHub Discussions](https://github.com/usemanusai/pic2tool/discussions)
 - **Updates**: Watch the repository for updates and releases
+
+### Quick Diagnostic Commands
+
+```bash
+# Quick environment check
+npm run validate
+
+# Full setup with troubleshooting
+npm run setup
+
+# Check setup logs
+cat setup-log.txt
+```
 
 ---
 
