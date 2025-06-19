@@ -21,7 +21,7 @@ The script automatically checks:
 - **Node.js Version**: Ensures you have Node.js 18.x or higher
 - **Package Manager**: Verifies npm availability and version
 - **Operating System**: Checks for Windows 11 compatibility (recommended)
-- **FFmpeg Installation**: Validates FFmpeg is available in PATH or project directory
+- **FFmpeg Installation**: Automatically downloads and installs FFmpeg if not found
 - **System Requirements**: Verifies minimum 8GB RAM and adequate disk space
 
 ### 📦 Dependency Management
@@ -77,8 +77,9 @@ Before running the setup script, ensure you have:
    ```
 
 3. **FFmpeg** (for video processing)
-   - Download from https://ffmpeg.org/download.html
-   - Add to system PATH or place `ffmpeg.exe` in project root
+   - **Automatically installed** by the setup script
+   - Manual installation: Download from https://ffmpeg.org/download.html
+   - Alternative: Add to system PATH or place `ffmpeg.exe` in project root
 
 ### API Keys (Optional but Recommended)
 
@@ -149,14 +150,24 @@ If build verification succeeds:
 node --version  # Verify update
 ```
 
-#### FFmpeg Not Found
+#### FFmpeg Installation Failed
 ```bash
-# Option 1: Add to PATH
+# The setup script automatically downloads FFmpeg
+# If automatic installation fails, try manual options:
+
+# Option 1: Re-run setup script
+npm run setup
+
+# Option 2: Add to PATH
 # Download from https://ffmpeg.org/download.html
 # Add bin directory to system PATH
 
-# Option 2: Local installation
+# Option 3: Local installation
 # Place ffmpeg.exe in project root directory
+
+# Option 4: Check bin directory
+# FFmpeg should be automatically installed to bin/ffmpeg.exe
+ls bin/ffmpeg.exe
 ```
 
 #### Dependency Installation Failed
@@ -263,7 +274,7 @@ Use this checklist to verify your setup:
 
 - [ ] Node.js 18+ installed and working
 - [ ] npm dependencies installed successfully
-- [ ] FFmpeg available (in PATH or locally)
+- [ ] FFmpeg automatically installed or available (in PATH or locally)
 - [ ] TypeScript compiles without errors
 - [ ] Webpack build completes successfully
 - [ ] ESLint passes without errors

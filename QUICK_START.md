@@ -20,7 +20,7 @@ That's it! The setup script will guide you through everything.
 ### 1. Environment Check ✅
 - Validates Node.js 18+ is installed
 - Checks for Windows 11 (recommended)
-- Verifies FFmpeg availability
+- Automatically downloads and installs FFmpeg if needed
 - Confirms system requirements (8GB+ RAM)
 
 ### 2. Dependency Installation 📦
@@ -60,8 +60,9 @@ This runs a fast check of your system requirements.
 ### Install Prerequisites
 
 1. **Node.js 18+**: Download from [nodejs.org](https://nodejs.org/)
-2. **FFmpeg**: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
-   - Add to PATH or place `ffmpeg.exe` in project root
+2. **FFmpeg**: Automatically installed by setup script
+   - Manual option: Download from [ffmpeg.org](https://ffmpeg.org/download.html)
+   - Alternative: Add to PATH or place `ffmpeg.exe` in project root
 
 ### Get API Keys (Optional)
 
@@ -117,12 +118,21 @@ Executes the test suite.
 node --version  # Should show 18.x or higher
 ```
 
-#### "FFmpeg not found"
+#### "FFmpeg installation failed"
 ```bash
-# Option 1: Add to PATH (recommended)
+# The setup script automatically downloads FFmpeg
+# If it fails, try these options:
+
+# Option 1: Re-run setup (recommended)
+npm run setup
+
+# Option 2: Check if FFmpeg was installed locally
+ls bin/ffmpeg.exe
+
+# Option 3: Manual installation
 # Download from ffmpeg.org and add bin directory to system PATH
 
-# Option 2: Local installation
+# Option 4: Local installation
 # Place ffmpeg.exe in the project root directory
 ```
 

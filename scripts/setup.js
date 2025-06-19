@@ -85,15 +85,118 @@ class SetupValidator {
   checkVersion(current, required) {
     const currentParts = current.split('.').map(Number);
     const requiredParts = required.split('.').map(Number);
-    
+
     for (let i = 0; i < Math.max(currentParts.length, requiredParts.length); i++) {
       const currentPart = currentParts[i] || 0;
       const requiredPart = requiredParts[i] || 0;
-      
+
       if (currentPart > requiredPart) return true;
       if (currentPart < requiredPart) return false;
     }
     return true;
+  }
+
+  async downloadAndInstallFFmpeg() {
+    try {
+      const https = require('https');
+      const { createWriteStream } = require('fs');
+      const { pipeline } = require('stream');
+      const { promisify } = require('util');
+      const pipelineAsync = promisify(pipeline);
+
+      // Create bin directory if it doesn't exist
+      const binDir = path.join(this.projectRoot, 'bin');
+      if (!fs.existsSync(binDir)) {
+        fs.mkdirSync(binDir, { recursive: true });
+      }
+
+      // FFmpeg download URLs for Windows
+      const ffmpegUrl = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip';
+      const zipPath = path.join(binDir, 'ffmpeg.zip');
+      const ffmpegExePath = path.join(binDir, 'ffmpeg.exe');
+
+      this.log('📥 Downloading FFmpeg from GitHub releases...', 'info');
+
+      // Download FFmpeg zip file
+      await new Promise((resolve, reject) => {
+        https.get(ffmpegUrl, (response) => {
+          if (response.statusCode === 302 || response.statusCode === 301) {
+            // Follow redirect
+            https.get(response.headers.location, (redirectResponse) => {
+              if (redirectResponse.statusCode === 200) {
+                const fileStream = createWriteStream(zipPath);
+                redirectResponse.pipe(fileStream);
+                fileStream.on('finish', () => {
+                  fileStream.close();
+                  resolve();
+                });
+                fileStream.on('error', reject);
+              } else {
+                reject(new Error(`HTTP ${redirectResponse.statusCode}`));
+              }
+            }).on('error', reject);
+          } else if (response.statusCode === 200) {
+            const fileStream = createWriteStream(zipPath);
+            response.pipe(fileStream);
+            fileStream.on('finish', () => {
+              fileStream.close();
+              resolve();
+            });
+            fileStream.on('error', reject);
+          } else {
+            reject(new Error(`HTTP ${response.statusCode}`));
+          }
+        }).on('error', reject);
+      });
+
+      this.log('📦 Extracting FFmpeg...', 'info');
+
+      // Extract ffmpeg.exe from the zip file
+      const AdmZip = require('adm-zip');
+      const zip = new AdmZip(zipPath);
+      const zipEntries = zip.getEntries();
+
+      // Find ffmpeg.exe in the zip
+      let ffmpegEntry = null;
+      for (const entry of zipEntries) {
+        if (entry.entryName.endsWith('ffmpeg.exe')) {
+          ffmpegEntry = entry;
+          break;
+        }
+      }
+
+      if (ffmpegEntry) {
+        // Extract ffmpeg.exe to bin directory
+        fs.writeFileSync(ffmpegExePath, ffmpegEntry.getData());
+
+        // Make executable (on Unix-like systems)
+        if (process.platform !== 'win32') {
+          fs.chmodSync(ffmpegExePath, '755');
+        }
+
+        // Clean up zip file
+        fs.unlinkSync(zipPath);
+
+        // Verify installation
+        const testResult = this.execCommand(`"${ffmpegExePath}" -version`);
+        if (testResult.success) {
+          this.log('✅ FFmpeg successfully installed and verified', 'success');
+          return ffmpegExePath;
+        } else {
+          throw new Error('FFmpeg installation verification failed');
+        }
+      } else {
+        throw new Error('ffmpeg.exe not found in downloaded archive');
+      }
+
+    } catch (error) {
+      this.log(`❌ Failed to download FFmpeg: ${error.message}`, 'error');
+      this.log('💡 Fallback options:', 'info');
+      this.log('   1. Download manually from https://ffmpeg.org/download.html', 'info');
+      this.log('   2. Place ffmpeg.exe in the project root directory', 'info');
+      this.log('   3. Add FFmpeg to your system PATH', 'info');
+      return null;
+    }
   }
 
   async validateEnvironment() {
@@ -172,7 +275,7 @@ class SetupValidator {
         path.join(this.projectRoot, 'ffmpeg', 'ffmpeg.exe'),
         path.join(this.projectRoot, 'bin', 'ffmpeg.exe')
       ];
-      
+
       let localFFmpegFound = false;
       for (const ffmpegPath of localFFmpegPaths) {
         if (fs.existsSync(ffmpegPath)) {
@@ -182,12 +285,21 @@ class SetupValidator {
           break;
         }
       }
-      
+
       if (!localFFmpegFound) {
         this.log('❌ FFmpeg not found in PATH or project directory', 'error');
-        this.log('   Please install FFmpeg or place ffmpeg.exe in the project root', 'error');
-        this.results.environment.ffmpeg = { valid: false };
-        this.results.overall.errors.push('FFmpeg not found');
+        this.log('🔄 Attempting to download and install FFmpeg automatically...', 'info');
+
+        const ffmpegInstalled = await this.downloadAndInstallFFmpeg();
+        if (ffmpegInstalled) {
+          this.log('✅ FFmpeg successfully downloaded and installed', 'success');
+          this.results.environment.ffmpeg = { valid: true, inPath: false, localPath: ffmpegInstalled, autoInstalled: true };
+        } else {
+          this.log('❌ Failed to automatically install FFmpeg', 'error');
+          this.log('   Please install FFmpeg manually or place ffmpeg.exe in the project root', 'error');
+          this.results.environment.ffmpeg = { valid: false };
+          this.results.overall.errors.push('FFmpeg not found');
+        }
       }
     }
 
@@ -689,9 +801,11 @@ class SetupValidator {
       }
 
       if (this.results.overall.errors.includes('FFmpeg not found')) {
-        this.log('📥 Install FFmpeg:', 'info');
+        this.log('📥 FFmpeg Installation Failed:', 'info');
+        this.log('   The automatic FFmpeg download failed. Manual options:', 'info');
         this.log('   1. Download from https://ffmpeg.org/download.html', 'info');
         this.log('   2. Add to system PATH or place ffmpeg.exe in project root', 'info');
+        this.log('   3. Re-run setup script to retry automatic installation', 'info');
       }
 
       if (this.results.overall.errors.includes('Dependency installation failed')) {
