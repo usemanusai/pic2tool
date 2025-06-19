@@ -152,7 +152,12 @@ class SetupValidator {
       this.log('📦 Extracting FFmpeg...', 'info');
 
       // Extract ffmpeg.exe from the zip file
-      const AdmZip = require('adm-zip');
+      let AdmZip;
+      try {
+        AdmZip = require('adm-zip');
+      } catch (error) {
+        throw new Error('adm-zip package not found. Please run: npm install adm-zip');
+      }
       const zip = new AdmZip(zipPath);
       const zipEntries = zip.getEntries();
 
