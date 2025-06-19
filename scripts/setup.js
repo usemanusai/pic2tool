@@ -265,6 +265,39 @@ class SetupValidator {
       this.results.overall.warnings.push('Application optimized for Windows 11');
     }
 
+    // FFmpeg check moved to after dependency installation
+    // This ensures adm-zip is available for automatic FFmpeg download
+
+    // Check system requirements
+    this.log('Checking system requirements...');
+    const totalMemory = Math.round(os.totalmem() / (1024 * 1024 * 1024)); // GB
+    const freeMemory = Math.round(os.freemem() / (1024 * 1024 * 1024)); // GB
+    
+    if (totalMemory >= 8) {
+      this.log(`✅ System memory: ${totalMemory}GB (meets 8GB minimum)`, 'success');
+      this.results.environment.memory = { total: totalMemory, valid: true };
+    } else {
+      this.log(`⚠️ System memory: ${totalMemory}GB (8GB recommended)`, 'warning');
+      this.results.environment.memory = { total: totalMemory, valid: false };
+      this.results.overall.warnings.push('Low system memory may affect performance');
+    }
+
+    // Check disk space
+    try {
+      const stats = fs.statSync(this.projectRoot);
+      this.log(`✅ Project directory accessible`, 'success');
+      this.results.environment.diskSpace = { valid: true };
+    } catch (error) {
+      this.log(`❌ Project directory access error: ${error.message}`, 'error');
+      this.results.environment.diskSpace = { valid: false };
+      this.results.overall.errors.push('Project directory access issues');
+    }
+  }
+
+  async validateFFmpeg() {
+    this.log('\n🎬 FFMPEG VALIDATION', 'header');
+    this.log('=' .repeat(50), 'header');
+
     // Check FFmpeg
     this.log('Checking FFmpeg installation...');
     const ffmpegResult = this.execCommand('ffmpeg -version');
@@ -306,31 +339,6 @@ class SetupValidator {
           this.results.overall.errors.push('FFmpeg not found');
         }
       }
-    }
-
-    // Check system requirements
-    this.log('Checking system requirements...');
-    const totalMemory = Math.round(os.totalmem() / (1024 * 1024 * 1024)); // GB
-    const freeMemory = Math.round(os.freemem() / (1024 * 1024 * 1024)); // GB
-    
-    if (totalMemory >= 8) {
-      this.log(`✅ System memory: ${totalMemory}GB (meets 8GB minimum)`, 'success');
-      this.results.environment.memory = { total: totalMemory, valid: true };
-    } else {
-      this.log(`⚠️ System memory: ${totalMemory}GB (8GB recommended)`, 'warning');
-      this.results.environment.memory = { total: totalMemory, valid: false };
-      this.results.overall.warnings.push('Low system memory may affect performance');
-    }
-
-    // Check disk space
-    try {
-      const stats = fs.statSync(this.projectRoot);
-      this.log(`✅ Project directory accessible`, 'success');
-      this.results.environment.diskSpace = { valid: true };
-    } catch (error) {
-      this.log(`❌ Project directory access error: ${error.message}`, 'error');
-      this.results.environment.diskSpace = { valid: false };
-      this.results.overall.errors.push('Project directory access issues');
     }
   }
 
@@ -859,6 +867,7 @@ class SetupValidator {
       // Run all validation steps
       await this.validateEnvironment();
       await this.manageDependencies();
+      await this.validateFFmpeg();  // FFmpeg validation after dependencies are installed
       await this.configureAPIs();
       await this.validateProjectStructure();
       await this.verifyBuildSystem();
