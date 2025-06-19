@@ -265,48 +265,8 @@ class SetupValidator {
       this.results.overall.warnings.push('Application optimized for Windows 11');
     }
 
-    // Check FFmpeg
-    this.log('Checking FFmpeg installation...');
-    const ffmpegResult = this.execCommand('ffmpeg -version');
-    if (ffmpegResult.success) {
-      const versionMatch = ffmpegResult.output.match(/ffmpeg version ([^\s]+)/);
-      const version = versionMatch ? versionMatch[1] : 'unknown';
-      this.log(`✅ FFmpeg ${version} found in PATH`, 'success');
-      this.results.environment.ffmpeg = { version, valid: true, inPath: true };
-    } else {
-      // Check for local FFmpeg
-      const localFFmpegPaths = [
-        path.join(this.projectRoot, 'ffmpeg.exe'),
-        path.join(this.projectRoot, 'ffmpeg', 'ffmpeg.exe'),
-        path.join(this.projectRoot, 'bin', 'ffmpeg.exe')
-      ];
-
-      let localFFmpegFound = false;
-      for (const ffmpegPath of localFFmpegPaths) {
-        if (fs.existsSync(ffmpegPath)) {
-          this.log(`✅ FFmpeg found locally at ${ffmpegPath}`, 'success');
-          this.results.environment.ffmpeg = { valid: true, inPath: false, localPath: ffmpegPath };
-          localFFmpegFound = true;
-          break;
-        }
-      }
-
-      if (!localFFmpegFound) {
-        this.log('❌ FFmpeg not found in PATH or project directory', 'error');
-        this.log('🔄 Attempting to download and install FFmpeg automatically...', 'info');
-
-        const ffmpegInstalled = await this.downloadAndInstallFFmpeg();
-        if (ffmpegInstalled) {
-          this.log('✅ FFmpeg successfully downloaded and installed', 'success');
-          this.results.environment.ffmpeg = { valid: true, inPath: false, localPath: ffmpegInstalled, autoInstalled: true };
-        } else {
-          this.log('❌ Failed to automatically install FFmpeg', 'error');
-          this.log('   Please install FFmpeg manually or place ffmpeg.exe in the project root', 'error');
-          this.results.environment.ffmpeg = { valid: false };
-          this.results.overall.errors.push('FFmpeg not found');
-        }
-      }
-    }
+    // FFmpeg check moved to after dependency installation
+    // This ensures adm-zip is available for automatic FFmpeg download
 
     // Check system requirements
     this.log('Checking system requirements...');
@@ -409,6 +369,54 @@ class SetupValidator {
       } else {
         this.log(`⚠️ Global ${dep} not found (will use local version)`, 'warning');
         this.results.dependencies[`global-${dep}`] = { present: false };
+      }
+    }
+  }
+
+  async validateFFmpeg() {
+    this.log('\n🎬 FFMPEG VALIDATION', 'header');
+    this.log('=' .repeat(50), 'header');
+
+    // Check FFmpeg
+    this.log('Checking FFmpeg installation...');
+    const ffmpegResult = this.execCommand('ffmpeg -version');
+    if (ffmpegResult.success) {
+      const versionMatch = ffmpegResult.output.match(/ffmpeg version ([^\s]+)/);
+      const version = versionMatch ? versionMatch[1] : 'unknown';
+      this.log(`✅ FFmpeg ${version} found in PATH`, 'success');
+      this.results.environment.ffmpeg = { version, valid: true, inPath: true };
+    } else {
+      // Check for local FFmpeg
+      const localFFmpegPaths = [
+        path.join(this.projectRoot, 'ffmpeg.exe'),
+        path.join(this.projectRoot, 'ffmpeg', 'ffmpeg.exe'),
+        path.join(this.projectRoot, 'bin', 'ffmpeg.exe')
+      ];
+
+      let localFFmpegFound = false;
+      for (const ffmpegPath of localFFmpegPaths) {
+        if (fs.existsSync(ffmpegPath)) {
+          this.log(`✅ FFmpeg found locally at ${ffmpegPath}`, 'success');
+          this.results.environment.ffmpeg = { valid: true, inPath: false, localPath: ffmpegPath };
+          localFFmpegFound = true;
+          break;
+        }
+      }
+
+      if (!localFFmpegFound) {
+        this.log('❌ FFmpeg not found in PATH or project directory', 'error');
+        this.log('🔄 Attempting to download and install FFmpeg automatically...', 'info');
+
+        const ffmpegInstalled = await this.downloadAndInstallFFmpeg();
+        if (ffmpegInstalled) {
+          this.log('✅ FFmpeg successfully downloaded and installed', 'success');
+          this.results.environment.ffmpeg = { valid: true, inPath: false, localPath: ffmpegInstalled, autoInstalled: true };
+        } else {
+          this.log('❌ Failed to automatically install FFmpeg', 'error');
+          this.log('   Please install FFmpeg manually or place ffmpeg.exe in the project root', 'error');
+          this.results.environment.ffmpeg = { valid: false };
+          this.results.overall.errors.push('FFmpeg not found');
+        }
       }
     }
   }
@@ -859,6 +867,7 @@ class SetupValidator {
       // Run all validation steps
       await this.validateEnvironment();
       await this.manageDependencies();
+      await this.validateFFmpeg();  // FFmpeg validation after dependencies are installed
       await this.configureAPIs();
       await this.validateProjectStructure();
       await this.verifyBuildSystem();
