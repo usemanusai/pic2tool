@@ -16,15 +16,18 @@ export interface AppState {
 }
 
 const App: React.FC = () => {
+  console.log('App component rendering...');
+  console.log('electronAPI available:', !!window.electronAPI);
+
   const [appState, setAppState] = useState<AppState>({
     isRecording: false,
     isProcessing: false,
     progress: {
       percent: 0,
-      status: 'Ready',
+      status: window.electronAPI ? 'Ready' : 'Loading...',
     },
     generatedCode: null,
-    error: null,
+    error: window.electronAPI ? null : 'Electron API not available',
   });
 
   useEffect(() => {

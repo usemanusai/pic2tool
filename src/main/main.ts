@@ -49,16 +49,28 @@ class AutomatedDevelopmentRecorder {
     });
 
     // Load the React app
-    if (process.env.NODE_ENV === 'development' && process.env.WEBPACK_DEV_SERVER === 'true') {
-      await this.mainWindow.loadURL('http://localhost:3000');
-      this.mainWindow.webContents.openDevTools();
+    const isDev = process.env.NODE_ENV === 'development';
+    const useDevServer = process.argv.includes('--dev') || process.env.WEBPACK_DEV_SERVER === 'true';
+
+    if (isDev && useDevServer) {
+      // Try to load from dev server first
+      try {
+        await this.mainWindow.loadURL('http://localhost:3000');
+        this.mainWindow.webContents.openDevTools();
+        log.info('Loaded from development server');
+      } catch (error) {
+        log.warn('Dev server not available, falling back to built files');
+        const htmlPath = path.join(__dirname, 'index.html');
+        await this.mainWindow.loadFile(htmlPath);
+        if (isDev) this.mainWindow.webContents.openDevTools();
+      }
     } else {
       // Load the built HTML file from dist directory
       const htmlPath = path.join(__dirname, 'index.html');
       await this.mainWindow.loadFile(htmlPath);
 
-      // Open dev tools in development mode even when not using dev server
-      if (process.env.NODE_ENV === 'development') {
+      // Open dev tools in development mode
+      if (isDev) {
         this.mainWindow.webContents.openDevTools();
       }
     }
