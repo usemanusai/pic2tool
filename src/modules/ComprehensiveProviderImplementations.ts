@@ -8,13 +8,18 @@ import { VisionAnalysisResult } from './FreeVisionAPIProvider';
 import { ErrorHandler } from '../shared/ErrorHandler';
 
 export class ComprehensiveProviderImplementations {
-  
   /**
    * Analyze with OpenAI GPT-4o Vision (Premium)
    */
-  static async analyzeWithGPT4o(imageData: Buffer, apiKey: string, prompt?: string): Promise<VisionAnalysisResult> {
+  static async analyzeWithGPT4o(
+    imageData: Buffer,
+    apiKey: string,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Analyze this image in detail. Describe what you see, including any text, UI elements, objects, and their relationships. Focus on elements that might be relevant for automation or interaction.';
+    const analysisPrompt =
+      prompt ||
+      'Analyze this image in detail. Describe what you see, including any text, UI elements, objects, and their relationships. Focus on elements that might be relevant for automation or interaction.';
 
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
@@ -28,25 +33,26 @@ export class ComprehensiveProviderImplementations {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 2000,
-        temperature: 0.1
+        temperature: 0.1,
       },
       {
         timeout: 30000,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        }
+          Authorization: `Bearer ${apiKey}`,
+        },
       }
     );
 
-    const description = response.data.choices?.[0]?.message?.content || 'Unable to generate description';
+    const description =
+      response.data.choices?.[0]?.message?.content || 'Unable to generate description';
 
     return {
       description,
@@ -56,17 +62,23 @@ export class ComprehensiveProviderImplementations {
       metadata: {
         model: 'gpt-4o',
         premium: true,
-        cost: 0.015
-      }
+        cost: 0.015,
+      },
     };
   }
 
   /**
    * Analyze with Anthropic Claude 3.5 Sonnet Vision (Premium)
    */
-  static async analyzeWithClaudeSonnet(imageData: Buffer, apiKey: string, prompt?: string): Promise<VisionAnalysisResult> {
+  static async analyzeWithClaudeSonnet(
+    imageData: Buffer,
+    apiKey: string,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Analyze this image comprehensively. Describe what you see, including any text, UI elements, objects, and their spatial relationships. Provide detailed insights that would be useful for automation or interaction.';
+    const analysisPrompt =
+      prompt ||
+      'Analyze this image comprehensively. Describe what you see, including any text, UI elements, objects, and their spatial relationships. Provide detailed insights that would be useful for automation or interaction.';
 
     const response = await axios.post(
       'https://api.anthropic.com/v1/messages',
@@ -82,24 +94,24 @@ export class ComprehensiveProviderImplementations {
                 source: {
                   type: 'base64',
                   media_type: 'image/jpeg',
-                  data: base64Image
-                }
+                  data: base64Image,
+                },
               },
               {
                 type: 'text',
-                text: analysisPrompt
-              }
-            ]
-          }
-        ]
+                text: analysisPrompt,
+              },
+            ],
+          },
+        ],
       },
       {
         timeout: 30000,
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01'
-        }
+          'anthropic-version': '2023-06-01',
+        },
       }
     );
 
@@ -113,46 +125,55 @@ export class ComprehensiveProviderImplementations {
       metadata: {
         model: 'claude-3-5-sonnet-20241022',
         premium: true,
-        cost: 0.018
-      }
+        cost: 0.018,
+      },
     };
   }
 
   /**
    * Analyze with Google Gemini 2.5 Pro Vision (Premium)
    */
-  static async analyzeWithGeminiPro(imageData: Buffer, apiKey: string, prompt?: string): Promise<VisionAnalysisResult> {
+  static async analyzeWithGeminiPro(
+    imageData: Buffer,
+    apiKey: string,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Analyze this image in detail. Describe what you see, including any text, UI elements, buttons, or interactive components that might be relevant for automation. Provide comprehensive insights.';
+    const analysisPrompt =
+      prompt ||
+      'Analyze this image in detail. Describe what you see, including any text, UI elements, buttons, or interactive components that might be relevant for automation. Provide comprehensive insights.';
 
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
       {
-        contents: [{
-          parts: [
-            { text: analysisPrompt },
-            {
-              inline_data: {
-                mime_type: 'image/jpeg',
-                data: base64Image
-              }
-            }
-          ]
-        }],
+        contents: [
+          {
+            parts: [
+              { text: analysisPrompt },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Image,
+                },
+              },
+            ],
+          },
+        ],
         generationConfig: {
           maxOutputTokens: 2000,
-          temperature: 0.1
-        }
+          temperature: 0.1,
+        },
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate description';
+    const description =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate description';
 
     return {
       description,
@@ -162,34 +183,41 @@ export class ComprehensiveProviderImplementations {
       metadata: {
         model: 'gemini-2.5-pro',
         premium: true,
-        cost: 0.012
-      }
+        cost: 0.012,
+      },
     };
   }
 
   /**
    * Analyze with Replicate Vision Models (Freemium)
    */
-  static async analyzeWithReplicate(imageData: Buffer, apiKey: string, prompt?: string): Promise<VisionAnalysisResult> {
+  static async analyzeWithReplicate(
+    imageData: Buffer,
+    apiKey: string,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe this image in detail, focusing on any text, UI elements, and interactive components.';
+    const analysisPrompt =
+      prompt ||
+      'Describe this image in detail, focusing on any text, UI elements, and interactive components.';
 
     // Create prediction
     const createResponse = await axios.post(
       'https://api.replicate.com/v1/predictions',
       {
-        version: 'yorickvp/llava-13b:b5f6212d032508382d61ff00469ddda3e32fd8a0e75dc39d8a4191bb742157fb',
+        version:
+          'yorickvp/llava-13b:b5f6212d032508382d61ff00469ddda3e32fd8a0e75dc39d8a4191bb742157fb',
         input: {
           image: `data:image/jpeg;base64,${base64Image}`,
           prompt: analysisPrompt,
-          max_tokens: 1000
-        }
+          max_tokens: 1000,
+        },
       },
       {
         headers: {
-          'Authorization': `Token ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Token ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
       }
     );
 
@@ -198,14 +226,14 @@ export class ComprehensiveProviderImplementations {
     // Poll for completion
     let result;
     for (let i = 0; i < 30; i++) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const statusResponse = await axios.get(
         `https://api.replicate.com/v1/predictions/${predictionId}`,
         {
           headers: {
-            'Authorization': `Token ${apiKey}`
-          }
+            Authorization: `Token ${apiKey}`,
+          },
         }
       );
 
@@ -217,7 +245,9 @@ export class ComprehensiveProviderImplementations {
       }
     }
 
-    const description = Array.isArray(result) ? result.join('') : result || 'Unable to generate description';
+    const description = Array.isArray(result)
+      ? result.join('')
+      : result || 'Unable to generate description';
 
     return {
       description,
@@ -227,15 +257,19 @@ export class ComprehensiveProviderImplementations {
       metadata: {
         model: 'llava-13b',
         freemium: true,
-        cost: 0.01
-      }
+        cost: 0.01,
+      },
     };
   }
 
   /**
    * Analyze with Azure Document Intelligence (Specialized)
    */
-  static async analyzeWithAzureDocumentIntelligence(imageData: Buffer, apiKey: string, endpoint: string): Promise<VisionAnalysisResult> {
+  static async analyzeWithAzureDocumentIntelligence(
+    imageData: Buffer,
+    apiKey: string,
+    endpoint: string
+  ): Promise<VisionAnalysisResult> {
     const response = await axios.post(
       `${endpoint}/formrecognizer/documentModels/prebuilt-layout:analyze?api-version=2023-07-31`,
       imageData,
@@ -243,22 +277,22 @@ export class ComprehensiveProviderImplementations {
         timeout: 30000,
         headers: {
           'Ocp-Apim-Subscription-Key': apiKey,
-          'Content-Type': 'application/octet-stream'
-        }
+          'Content-Type': 'application/octet-stream',
+        },
       }
     );
 
     const operationLocation = response.headers['operation-location'];
-    
+
     // Poll for completion
     let analysisResult;
     for (let i = 0; i < 30; i++) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const statusResponse = await axios.get(operationLocation, {
         headers: {
-          'Ocp-Apim-Subscription-Key': apiKey
-        }
+          'Ocp-Apim-Subscription-Key': apiKey,
+        },
       });
 
       if (statusResponse.data.status === 'succeeded') {
@@ -275,7 +309,7 @@ export class ComprehensiveProviderImplementations {
     const tables = analysisResult?.tables || [];
 
     let description = 'Document Analysis Results:\n\n';
-    
+
     // Add text content
     if (paragraphs.length > 0) {
       description += 'Text Content:\n';
@@ -305,19 +339,25 @@ export class ComprehensiveProviderImplementations {
         pages: pages.length,
         paragraphs: paragraphs.length,
         tables: tables.length,
-        cost: 0.01
-      }
+        cost: 0.01,
+      },
     };
   }
 
   /**
    * Analyze with AWS Textract (Specialized)
    */
-  static async analyzeWithAWSTextract(imageData: Buffer, accessKey: string, secretKey: string, region: string = 'us-east-1'): Promise<VisionAnalysisResult> {
+  static async analyzeWithAWSTextract(
+    imageData: Buffer,
+    accessKey: string,
+    secretKey: string,
+    region: string = 'us-east-1'
+  ): Promise<VisionAnalysisResult> {
     // Note: This would require AWS SDK implementation
     // For now, return a placeholder implementation
-    
-    const description = 'AWS Textract analysis would be implemented here with proper AWS SDK integration.';
+
+    const description =
+      'AWS Textract analysis would be implemented here with proper AWS SDK integration.';
 
     return {
       description,
@@ -329,8 +369,8 @@ export class ComprehensiveProviderImplementations {
         specialized: true,
         documentAnalysis: true,
         cost: 0.015,
-        note: 'Requires AWS SDK implementation'
-      }
+        note: 'Requires AWS SDK implementation',
+      },
     };
   }
 
@@ -339,12 +379,12 @@ export class ComprehensiveProviderImplementations {
    */
   static handleProviderError(error: any, providerName: string): never {
     let errorMessage = `${providerName} analysis failed`;
-    
+
     if (error.response) {
       const status = error.response.status;
       const statusText = error.response.statusText;
       errorMessage += `: HTTP ${status} ${statusText}`;
-      
+
       if (status === 429) {
         errorMessage += ' (Rate limited)';
       } else if (status === 401 || status === 403) {

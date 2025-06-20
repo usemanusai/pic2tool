@@ -15,7 +15,7 @@ interface Source {
 const RecordingPanel: React.FC<RecordingPanelProps> = ({
   isRecording,
   onStartRecording,
-  onStopRecording
+  onStopRecording,
 }) => {
   const [sources, setSources] = useState<Source[]>([]);
   const [selectedSource, setSelectedSource] = useState<string>('');
@@ -32,11 +32,12 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
       setLoadingSources(true);
       const availableSources = await window.electronAPI.getSources();
       setSources(availableSources);
-      
+
       // Auto-select the first screen source
-      const screenSource = availableSources.find((source: any) => 
-        source.name.toLowerCase().includes('screen') || 
-        source.name.toLowerCase().includes('entire')
+      const screenSource = availableSources.find(
+        (source: any) =>
+          source.name.toLowerCase().includes('screen') ||
+          source.name.toLowerCase().includes('entire')
       );
       if (screenSource) {
         setSelectedSource(screenSource.id);
@@ -57,7 +58,7 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
     const config = {
       sourceId: selectedSource,
       outputPath: outputPath || `recording-${Date.now()}.webm`,
-      quality
+      quality,
     };
 
     onStartRecording(config);
@@ -66,7 +67,7 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
   return (
     <div className="recording-panel">
       <h3>Screen Recording</h3>
-      
+
       <div className="form-group">
         <label htmlFor="source-select">Select Source:</label>
         <div className="source-selection">
@@ -76,9 +77,7 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
             onChange={(e) => setSelectedSource(e.target.value)}
             disabled={isRecording || loadingSources}
           >
-            <option value="">
-              {loadingSources ? 'Loading sources...' : 'Select a source'}
-            </option>
+            <option value="">{loadingSources ? 'Loading sources...' : 'Select a source'}</option>
             {sources.map((source) => (
               <option key={source.id} value={source.id}>
                 {source.name}
@@ -132,10 +131,7 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
             🔴 Start Recording
           </button>
         ) : (
-          <button
-            className="record-button stop"
-            onClick={onStopRecording}
-          >
+          <button className="record-button stop" onClick={onStopRecording}>
             ⏹️ Stop Recording
           </button>
         )}

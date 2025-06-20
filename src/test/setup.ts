@@ -30,7 +30,7 @@ global.MediaRecorder = class MockMediaRecorder {
   ondataavailable = null;
   onstop = null;
   stream = {
-    getTracks: () => [{ stop: () => {} }]
+    getTracks: () => [{ stop: () => {} }],
   };
 } as any;
 
@@ -38,8 +38,8 @@ global.MediaRecorder = class MockMediaRecorder {
 Object.defineProperty(navigator, 'mediaDevices', {
   value: {
     getUserMedia: jest.fn().mockResolvedValue({
-      getTracks: () => [{ stop: () => {} }]
-    })
+      getTracks: () => [{ stop: () => {} }],
+    }),
   },
   writable: true,
 });
@@ -48,10 +48,7 @@ Object.defineProperty(navigator, 'mediaDevices', {
 const originalWarn = console.warn;
 beforeAll(() => {
   console.warn = (...args: any[]) => {
-    if (
-      typeof args[0] === 'string' &&
-      args[0].includes('React Router Future Flag Warning')
-    ) {
+    if (typeof args[0] === 'string' && args[0].includes('React Router Future Flag Warning')) {
       return;
     }
     originalWarn.call(console, ...args);

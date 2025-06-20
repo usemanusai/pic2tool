@@ -10,12 +10,7 @@ interface StatusBarProps {
   error: string | null;
 }
 
-const StatusBar: React.FC<StatusBarProps> = ({
-  progress,
-  isRecording,
-  isProcessing,
-  error
-}) => {
+const StatusBar: React.FC<StatusBarProps> = ({ progress, isRecording, isProcessing, error }) => {
   const getStatusIcon = () => {
     if (error) return '❌';
     if (isRecording) return '🔴';
@@ -43,10 +38,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
         {(isProcessing || progress.percent > 0) && (
           <div className="progress-section">
             <div className="progress-bar">
-              <div 
-                className="progress-fill"
-                style={{ width: `${progress.percent}%` }}
-              ></div>
+              <div className="progress-fill" style={{ width: `${progress.percent}%` }}></div>
             </div>
             <span className="progress-percent">{progress.percent}%</span>
           </div>
@@ -59,11 +51,7 @@ const StatusBar: React.FC<StatusBarProps> = ({
               REC
             </span>
           )}
-          {isProcessing && (
-            <span className="processing-indicator">
-              Processing...
-            </span>
-          )}
+          {isProcessing && <span className="processing-indicator">Processing...</span>}
         </div>
       </div>
     </div>

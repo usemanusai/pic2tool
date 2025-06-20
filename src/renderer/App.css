@@ -23,7 +23,7 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -49,7 +49,7 @@ body {
 }
 
 .header-button {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
   padding: 0.5rem;
@@ -60,7 +60,7 @@ body {
 }
 
 .header-button:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Main Content Styles */
@@ -263,8 +263,13 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 /* Code Display Styles */
@@ -275,7 +280,7 @@ body {
   background: white;
   margin: 1rem;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -488,12 +493,12 @@ body {
   .content-layout {
     flex-direction: column;
   }
-  
+
   .left-panel {
     width: 100%;
     height: 50%;
   }
-  
+
   .right-panel {
     height: 50%;
   }

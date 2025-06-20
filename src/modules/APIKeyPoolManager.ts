@@ -56,12 +56,12 @@ export class APIKeyPoolManager {
       azure: [],
       aws: [],
       huggingface: [],
-      ollama: []
+      ollama: [],
     };
     this.usageStats = new Map();
     this.currentKeyIndex = new Map();
     this.retryDelays = new Map();
-    
+
     this.loadKeyPools();
     this.initializeUsageTracking();
   }
@@ -69,13 +69,17 @@ export class APIKeyPoolManager {
   /**
    * Add a new API key to the pool
    */
-  async addAPIKey(provider: APIKey['provider'], key: string, options?: {
-    name?: string;
-    tier?: 'free' | 'trial' | 'paid';
-    dailyLimit?: number;
-    expiresAt?: Date;
-    region?: string;
-  }): Promise<string> {
+  async addAPIKey(
+    provider: APIKey['provider'],
+    key: string,
+    options?: {
+      name?: string;
+      tier?: 'free' | 'trial' | 'paid';
+      dailyLimit?: number;
+      expiresAt?: Date;
+      region?: string;
+    }
+  ): Promise<string> {
     const keyId = this.generateKeyId();
     const apiKey: APIKey = {
       id: keyId,
@@ -84,25 +88,26 @@ export class APIKeyPoolManager {
       name: options?.name || `${provider}-${keyId.slice(-4)}`,
       isActive: true,
       usageCount: 0,
-      dailyLimit: options?.dailyLimit || this.getDefaultDailyLimit(provider, options?.tier || 'free'),
+      dailyLimit:
+        options?.dailyLimit || this.getDefaultDailyLimit(provider, options?.tier || 'free'),
       createdAt: new Date(),
       metadata: {
         tier: options?.tier || 'free',
         expiresAt: options?.expiresAt,
-        region: options?.region
-      }
+        region: options?.region,
+      },
     };
 
     this.keyPools[provider].push(apiKey);
     await this.saveKeyPools();
-    
+
     // Initialize usage stats
     this.usageStats.set(keyId, {
       totalCalls: 0,
       successfulCalls: 0,
       failedCalls: 0,
       rateLimitHits: 0,
-      lastReset: new Date()
+      lastReset: new Date(),
     });
 
     return keyId;
@@ -112,11 +117,12 @@ export class APIKeyPoolManager {
    * Get the next available API key for a provider
    */
   getNextAvailableKey(provider: APIKey['provider']): APIKey | null {
-    const keys = this.keyPools[provider].filter(key => 
-      key.isActive && 
-      !this.isRateLimited(key) && 
-      !this.isExpired(key) &&
-      !this.isDailyLimitExceeded(key)
+    const keys = this.keyPools[provider].filter(
+      (key) =>
+        key.isActive &&
+        !this.isRateLimited(key) &&
+        !this.isExpired(key) &&
+        !this.isDailyLimitExceeded(key)
     );
 
     if (keys.length === 0) {
@@ -170,7 +176,7 @@ export class APIKeyPoolManager {
     dailyLimit: number;
     tier: string;
   }> {
-    return this.keyPools[provider].map(key => ({
+    return this.keyPools[provider].map((key) => ({
       id: key.id,
       name: key.name || key.id,
       isActive: key.isActive,
@@ -179,7 +185,7 @@ export class APIKeyPoolManager {
       isDailyLimitExceeded: this.isDailyLimitExceeded(key),
       usageCount: key.usageCount,
       dailyLimit: key.dailyLimit,
-      tier: key.metadata?.tier || 'unknown'
+      tier: key.metadata?.tier || 'unknown',
     }));
   }
 
@@ -189,7 +195,7 @@ export class APIKeyPoolManager {
   async removeAPIKey(keyId: string): Promise<boolean> {
     for (const provider in this.keyPools) {
       const keys = this.keyPools[provider as keyof APIKeyPool];
-      const index = keys.findIndex(key => key.id === keyId);
+      const index = keys.findIndex((key) => key.id === keyId);
       if (index !== -1) {
         keys.splice(index, 1);
         this.usageStats.delete(keyId);
@@ -212,15 +218,15 @@ export class APIKeyPoolManager {
    */
   resetDailyUsage(): void {
     for (const provider in this.keyPools) {
-      this.keyPools[provider as keyof APIKeyPool].forEach(key => {
+      this.keyPools[provider as keyof APIKeyPool].forEach((key) => {
         key.usageCount = 0;
       });
     }
-    
-    this.usageStats.forEach(stats => {
+
+    this.usageStats.forEach((stats) => {
       stats.lastReset = new Date();
     });
-    
+
     this.saveKeyPools();
   }
 
@@ -236,9 +242,9 @@ export class APIKeyPoolManager {
       azure: { free: 5000, trial: 20000, paid: 100000 },
       aws: { free: 1000, trial: 5000, paid: 50000 },
       huggingface: { free: 1000, trial: 10000, paid: 100000 },
-      ollama: { free: Infinity, trial: Infinity, paid: Infinity }
+      ollama: { free: Infinity, trial: Infinity, paid: Infinity },
     };
-    
+
     return limits[provider]?.[tier as keyof typeof limits.openai] || 100;
   }
 
@@ -256,7 +262,7 @@ export class APIKeyPoolManager {
 
   private findKeyById(keyId: string): APIKey | null {
     for (const provider in this.keyPools) {
-      const key = this.keyPools[provider as keyof APIKeyPool].find(k => k.id === keyId);
+      const key = this.keyPools[provider as keyof APIKeyPool].find((k) => k.id === keyId);
       if (key) return key;
     }
     return null;
@@ -294,14 +300,14 @@ export class APIKeyPoolManager {
   private initializeUsageTracking(): void {
     // Initialize usage stats for existing keys
     for (const provider in this.keyPools) {
-      this.keyPools[provider as keyof APIKeyPool].forEach(key => {
+      this.keyPools[provider as keyof APIKeyPool].forEach((key) => {
         if (!this.usageStats.has(key.id)) {
           this.usageStats.set(key.id, {
             totalCalls: 0,
             successfulCalls: 0,
             failedCalls: 0,
             rateLimitHits: 0,
-            lastReset: new Date()
+            lastReset: new Date(),
           });
         }
       });
@@ -316,9 +322,9 @@ export class APIKeyPoolManager {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-    
+
     const msUntilMidnight = tomorrow.getTime() - now.getTime();
-    
+
     setTimeout(() => {
       this.resetDailyUsage();
       // Schedule next reset

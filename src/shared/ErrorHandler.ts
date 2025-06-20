@@ -31,14 +31,14 @@ export class ErrorHandler {
       message: this.getErrorMessage(error),
       details: error,
       timestamp: new Date(),
-      stack: error?.stack
+      stack: error?.stack,
     };
 
     // Log the error
     log.error(`[${context || 'Unknown'}] ${appError.code}: ${appError.message}`, appError.details);
 
     // Notify callbacks
-    this.errorCallbacks.forEach(callback => {
+    this.errorCallbacks.forEach((callback) => {
       try {
         callback(appError);
       } catch (callbackError) {
@@ -67,21 +67,25 @@ export class ErrorHandler {
       code,
       message,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
   public isNetworkError(error: any): boolean {
     const networkCodes = ['ENOTFOUND', 'ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET'];
-    return networkCodes.includes(error?.code) || 
-           error?.message?.includes('network') ||
-           error?.message?.includes('fetch');
+    return (
+      networkCodes.includes(error?.code) ||
+      error?.message?.includes('network') ||
+      error?.message?.includes('fetch')
+    );
   }
 
   public isAPIError(error: any): boolean {
-    return error?.response?.status >= 400 || 
-           error?.message?.includes('API') ||
-           error?.message?.includes('rate limit');
+    return (
+      error?.response?.status >= 400 ||
+      error?.message?.includes('API') ||
+      error?.message?.includes('rate limit')
+    );
   }
 
   public isFileSystemError(error: any): boolean {
@@ -114,32 +118,52 @@ export class ErrorHandler {
         return error.message || 'An unexpected error occurred. Please try again.';
     }
   }
+
+  // Static method for simple error logging
+  public static logError(message: string, error?: any): void {
+    log.error(message, error);
+    if (error) {
+      ErrorHandler.getInstance().handleError(error, message);
+    }
+  }
 }
 
 // Specific error types
 export class RecordingError extends Error {
-  constructor(message: string, public details?: any) {
+  constructor(
+    message: string,
+    public details?: any
+  ) {
     super(message);
     this.name = 'RecordingError';
   }
 }
 
 export class VideoProcessingError extends Error {
-  constructor(message: string, public details?: any) {
+  constructor(
+    message: string,
+    public details?: any
+  ) {
     super(message);
     this.name = 'VideoProcessingError';
   }
 }
 
 export class VisionAnalysisError extends Error {
-  constructor(message: string, public details?: any) {
+  constructor(
+    message: string,
+    public details?: any
+  ) {
     super(message);
     this.name = 'VisionAnalysisError';
   }
 }
 
 export class CodeGenerationError extends Error {
-  constructor(message: string, public details?: any) {
+  constructor(
+    message: string,
+    public details?: any
+  ) {
     super(message);
     this.name = 'CodeGenerationError';
   }

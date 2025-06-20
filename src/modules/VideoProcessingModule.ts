@@ -2,7 +2,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as log from 'electron-log';
-import Jimp from 'jimp';
+import { Jimp } from 'jimp';
 
 export interface FrameInfo {
   path: string;
@@ -23,7 +23,7 @@ export class VideoProcessingModule {
     frameRate: 2, // Extract 2 frames per second
     skipSimilarFrames: true,
     similarityThreshold: 0.95,
-    maxFrames: 1000
+    maxFrames: 1000,
   };
 
   constructor() {
@@ -37,7 +37,7 @@ export class VideoProcessingModule {
       'ffmpeg', // If in PATH
       'C:\\ffmpeg\\bin\\ffmpeg.exe',
       'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
-      path.join(process.cwd(), 'ffmpeg', 'ffmpeg.exe')
+      path.join(process.cwd(), 'ffmpeg', 'ffmpeg.exe'),
     ];
 
     for (const ffmpegPath of possiblePaths) {
@@ -52,8 +52,8 @@ export class VideoProcessingModule {
   }
 
   public async extractFrames(
-    videoPath: string, 
-    projectPath: string, 
+    videoPath: string,
+    projectPath: string,
     options: ProcessingOptions = {}
   ): Promise<FrameInfo[]> {
     try {
@@ -73,7 +73,7 @@ export class VideoProcessingModule {
 
       // Extract frames at specified rate
       const rawFrames = await this.extractRawFrames(videoPath, framesDir, opts.frameRate!);
-      
+
       // Filter similar frames if enabled
       let finalFrames = rawFrames;
       if (opts.skipSimilarFrames) {
@@ -87,7 +87,6 @@ export class VideoProcessingModule {
 
       log.info(`Extracted ${finalFrames.length} frames from ${rawFrames.length} total frames`);
       return finalFrames;
-
     } catch (error) {
       log.error('Error extracting frames:', error);
       throw error;
@@ -107,8 +106,8 @@ export class VideoProcessingModule {
   }
 
   private async extractRawFrames(
-    videoPath: string, 
-    outputDir: string, 
+    videoPath: string,
+    outputDir: string,
     frameRate: number
   ): Promise<FrameInfo[]> {
     return new Promise((resolve, reject) => {
@@ -118,7 +117,7 @@ export class VideoProcessingModule {
       ffmpeg(videoPath)
         .outputOptions([
           `-vf fps=${frameRate}`,
-          '-q:v 2' // High quality
+          '-q:v 2', // High quality
         ])
         .output(path.join(outputDir, 'frame_%04d.png'))
         .on('start', (commandLine) => {
@@ -129,15 +128,16 @@ export class VideoProcessingModule {
         })
         .on('end', () => {
           // Read the generated frames
-          const frameFiles = fs.readdirSync(outputDir)
-            .filter(file => file.startsWith('frame_') && file.endsWith('.png'))
+          const frameFiles = fs
+            .readdirSync(outputDir)
+            .filter((file) => file.startsWith('frame_') && file.endsWith('.png'))
             .sort();
 
           frameFiles.forEach((file, index) => {
             frames.push({
               path: path.join(outputDir, file),
               timestamp: index / frameRate,
-              index: index
+              index: index,
             });
           });
 
@@ -152,25 +152,19 @@ export class VideoProcessingModule {
     });
   }
 
-  private async filterSimilarFrames(
-    frames: FrameInfo[], 
-    threshold: number
-  ): Promise<FrameInfo[]> {
+  private async filterSimilarFrames(frames: FrameInfo[], threshold: number): Promise<FrameInfo[]> {
     try {
       log.info('Filtering similar frames with threshold:', threshold);
-      
+
       if (frames.length === 0) return frames;
 
       const filteredFrames: FrameInfo[] = [frames[0]]; // Always keep first frame
-      
+
       for (let i = 1; i < frames.length; i++) {
-        const similarity = await this.calculateFrameSimilarity(
-          frames[i - 1].path, 
-          frames[i].path
-        );
-        
+        const similarity = await this.calculateFrameSimilarity(frames[i - 1].path, frames[i].path);
+
         frames[i].similarity = similarity;
-        
+
         if (similarity < threshold) {
           filteredFrames.push(frames[i]);
         } else {
@@ -180,7 +174,6 @@ export class VideoProcessingModule {
 
       log.info(`Filtered ${frames.length - filteredFrames.length} similar frames`);
       return filteredFrames;
-
     } catch (error) {
       log.error('Error filtering similar frames:', error);
       // Return all frames if filtering fails
@@ -198,8 +191,8 @@ export class VideoProcessingModule {
       const width = 64;
       const height = 64;
 
-      image1.resize(width, height);
-      image2.resize(width, height);
+      image1.resize({ w: width, h: height });
+      image2.resize({ w: width, h: height });
 
       // Calculate pixel-by-pixel difference
       let totalDiff = 0;
@@ -207,8 +200,8 @@ export class VideoProcessingModule {
 
       for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
-          const color1 = Jimp.intToRGBA(image1.getPixelColor(x, y));
-          const color2 = Jimp.intToRGBA(image2.getPixelColor(x, y));
+          const color1 = this.intToRGBA(image1.getPixelColor(x, y));
+          const color2 = this.intToRGBA(image2.getPixelColor(x, y));
 
           // Calculate color difference
           const rDiff = Math.abs(color1.r - color2.r);
@@ -234,7 +227,7 @@ export class VideoProcessingModule {
 
         const sizeDiff = Math.abs(stats1.size - stats2.size);
         const avgSize = (stats1.size + stats2.size) / 2;
-        const similarity = 1 - (sizeDiff / avgSize);
+        const similarity = 1 - sizeDiff / avgSize;
 
         return Math.max(0, Math.min(1, similarity));
       } catch (fallbackError) {
@@ -242,6 +235,18 @@ export class VideoProcessingModule {
         return 0;
       }
     }
+  }
+
+  /**
+   * Helper function to convert integer color to RGBA (replacement for Jimp.intToRGBA)
+   */
+  private intToRGBA(int: number): { r: number; g: number; b: number; a: number } {
+    return {
+      r: (int >>> 24) & 0xff,
+      g: (int >>> 16) & 0xff,
+      b: (int >>> 8) & 0xff,
+      a: int & 0xff,
+    };
   }
 
   private selectRepresentativeFrames(frames: FrameInfo[], maxFrames: number): FrameInfo[] {
@@ -260,8 +265,8 @@ export class VideoProcessingModule {
   }
 
   public async convertVideoFormat(
-    inputPath: string, 
-    outputPath: string, 
+    inputPath: string,
+    outputPath: string,
     format: string = 'mp4'
   ): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -289,7 +294,7 @@ export class VideoProcessingModule {
         height: info.streams[0].height,
         frameRate: eval(info.streams[0].r_frame_rate),
         format: info.format.format_name,
-        size: info.format.size
+        size: info.format.size,
       };
     } catch (error) {
       log.error('Error getting video metadata:', error);

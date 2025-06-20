@@ -20,7 +20,7 @@ const MainContent: React.FC<MainContentProps> = ({
   onStopRecording,
   onProcessVideo,
   onClearError,
-  onClearResults
+  onClearResults,
 }) => {
   const [activeTab, setActiveTab] = useState<'record' | 'process' | 'config'>('record');
 
@@ -36,10 +36,7 @@ const MainContent: React.FC<MainContentProps> = ({
         );
       case 'process':
         return (
-          <ProcessingPanel
-            isProcessing={appState.isProcessing}
-            onProcessVideo={onProcessVideo}
-          />
+          <ProcessingPanel isProcessing={appState.isProcessing} onProcessVideo={onProcessVideo} />
         );
       case 'config':
         return <ConfigPanel />;
@@ -87,17 +84,12 @@ const MainContent: React.FC<MainContentProps> = ({
             </button>
           </div>
 
-          <div className="tab-content">
-            {renderTabContent()}
-          </div>
+          <div className="tab-content">{renderTabContent()}</div>
         </div>
 
         {/* Right Panel - Results */}
         <div className="right-panel">
-          <CodeDisplay
-            generatedCode={appState.generatedCode}
-            onClearResults={onClearResults}
-          />
+          <CodeDisplay generatedCode={appState.generatedCode} onClearResults={onClearResults} />
         </div>
       </div>
     </main>

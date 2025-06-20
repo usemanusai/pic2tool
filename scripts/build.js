@@ -15,14 +15,29 @@ console.log(`🏗️  CI: ${isCI ? 'yes' : 'no'}`);
 function run(command, options = {}) {
   console.log(`⚡ Running: ${command}`);
   try {
-    execSync(command, { 
-      stdio: 'inherit', 
+    execSync(command, {
+      stdio: 'inherit',
       cwd: path.resolve(__dirname, '..'),
-      ...options 
+      ...options
     });
   } catch (error) {
     console.error(`❌ Command failed: ${command}`);
     process.exit(1);
+  }
+}
+
+function runSafe(command, options = {}) {
+  console.log(`⚡ Running: ${command}`);
+  try {
+    execSync(command, {
+      stdio: 'inherit',
+      cwd: path.resolve(__dirname, '..'),
+      ...options
+    });
+    return true;
+  } catch (error) {
+    console.warn(`⚠️  Command failed: ${command}`);
+    return false;
   }
 }
 
@@ -86,9 +101,8 @@ run('npx tsc --noEmit');
 // Linting
 if (!isCI) {
   console.log('\n🔍 Linting...');
-  try {
-    run('npm run lint');
-  } catch (error) {
+  const lintSuccess = runSafe('npm run lint');
+  if (!lintSuccess) {
     console.warn('⚠️  Linting failed, continuing build...');
   }
 }

@@ -36,7 +36,7 @@ module.exports = [
     output: {
       path: resolvePath('dist'),
       filename: 'main.js',
-      clean: true,
+      clean: false, // Don't clean for main process to preserve other builds
     },
     node: {
       __dirname: false,

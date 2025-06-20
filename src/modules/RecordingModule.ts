@@ -37,11 +37,11 @@ export class RecordingModule {
 
       // Get the video stream from the selected source
       const stream = await this.getVideoStream(config.sourceId);
-      
+
       // Configure MediaRecorder
       const options = {
         mimeType: 'video/webm;codecs=vp9',
-        videoBitsPerSecond: this.getVideoBitrate(config.quality || 'medium')
+        videoBitsPerSecond: this.getVideoBitrate(config.quality || 'medium'),
       };
 
       this.mediaRecorder = new MediaRecorder(stream, options);
@@ -66,14 +66,13 @@ export class RecordingModule {
       log.info('Recording started successfully');
       return {
         success: true,
-        videoPath: config.outputPath
+        videoPath: config.outputPath,
       };
-
     } catch (error) {
       log.error('Error starting recording:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -90,29 +89,28 @@ export class RecordingModule {
         this.mediaRecorder!.onstop = async () => {
           const duration = Date.now() - this.startTime;
           const videoPath = await this.saveRecording();
-          
+
           this.isRecording = false;
           this.mediaRecorder = null;
-          
+
           log.info('Recording stopped successfully');
           resolve({
             success: true,
             videoPath,
-            duration
+            duration,
           });
         };
 
         this.mediaRecorder!.stop();
-        
-        // Stop all tracks to release the screen capture
-        this.mediaRecorder!.stream.getTracks().forEach(track => track.stop());
-      });
 
+        // Stop all tracks to release the screen capture
+        this.mediaRecorder!.stream.getTracks().forEach((track) => track.stop());
+      });
     } catch (error) {
       log.error('Error stopping recording:', error);
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -120,10 +118,10 @@ export class RecordingModule {
   private async getVideoStream(sourceId: string): Promise<MediaStream> {
     try {
       const sources = await desktopCapturer.getSources({
-        types: ['window', 'screen']
+        types: ['window', 'screen'],
       });
 
-      const selectedSource = sources.find(source => source.id === sourceId);
+      const selectedSource = sources.find((source) => source.id === sourceId);
       if (!selectedSource) {
         throw new Error(`Source with id ${sourceId} not found`);
       }
@@ -139,9 +137,9 @@ export class RecordingModule {
             maxWidth: 1920,
             minHeight: 720,
             maxHeight: 1080,
-            maxFrameRate: 30
-          }
-        } as any
+            maxFrameRate: 30,
+          },
+        } as any,
       };
 
       // Use the global navigator in the main process context
@@ -182,9 +180,10 @@ export class RecordingModule {
     try {
       const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
       const buffer = Buffer.from(await blob.arrayBuffer());
-      
-      const finalPath = outputPath || path.join(process.cwd(), 'recordings', `recording-${Date.now()}.webm`);
-      
+
+      const finalPath =
+        outputPath || path.join(process.cwd(), 'recordings', `recording-${Date.now()}.webm`);
+
       // Ensure directory exists
       const dir = path.dirname(finalPath);
       if (!fs.existsSync(dir)) {
@@ -193,7 +192,7 @@ export class RecordingModule {
 
       fs.writeFileSync(finalPath, buffer);
       log.info('Recording saved to:', finalPath);
-      
+
       return finalPath;
     } catch (error) {
       log.error('Error saving recording:', error);
@@ -208,7 +207,7 @@ export class RecordingModule {
   public async getAvailableSources(): Promise<DesktopCapturerSource[]> {
     try {
       const sources = await desktopCapturer.getSources({
-        types: ['window', 'screen']
+        types: ['window', 'screen'],
       });
       return sources;
     } catch (error) {

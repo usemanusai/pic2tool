@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { VisionProvider } from '../../modules/ComprehensiveVisionProviders';
-import { ProviderPreferences, UsageTracking, BudgetControl } from '../../modules/EnhancedVisionProviderManager';
+import {
+  ProviderPreferences,
+  UsageTracking,
+  BudgetControl,
+} from '../../modules/EnhancedVisionProviderManager';
 
 interface EnhancedConfigPanelProps {
   onClose?: () => void;
 }
 
 const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) => {
-  const [activeTab, setActiveTab] = useState<'providers' | 'preferences' | 'budget' | 'analytics' | 'recommendations'>('providers');
+  const [activeTab, setActiveTab] = useState<
+    'providers' | 'preferences' | 'budget' | 'analytics' | 'recommendations'
+  >('providers');
   const [providers, setProviders] = useState<Record<string, VisionProvider[]>>({});
   const [preferences, setPreferences] = useState<ProviderPreferences>({
     mode: 'free_only',
@@ -17,7 +23,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
     preferredRegions: ['global'],
     blacklistedProviders: [],
     whitelistedProviders: [],
-    enableSpecialized: true
+    enableSpecialized: true,
   });
   const [usageStats, setUsageStats] = useState<Map<string, UsageTracking>>(new Map());
   const [budgetControl, setBudgetControl] = useState<BudgetControl>({
@@ -25,7 +31,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
     currentSpend: 0,
     remainingBudget: 0,
     costPerRequest: {},
-    projectedMonthlySpend: 0
+    projectedMonthlySpend: 0,
   });
   const [recommendations, setRecommendations] = useState<Record<string, VisionProvider[]>>({});
 
@@ -35,13 +41,14 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
 
   const loadData = async () => {
     try {
-      const [providersData, preferencesData, statsData, budgetData, recommendationsData] = await Promise.all([
-        window.electronAPI.getProvidersByCategory(),
-        window.electronAPI.getProviderPreferences(),
-        window.electronAPI.getProviderStatistics(),
-        window.electronAPI.getBudgetStatus(),
-        window.electronAPI.getProviderRecommendations()
-      ]);
+      const [providersData, preferencesData, statsData, budgetData, recommendationsData] =
+        await Promise.all([
+          window.electronAPI.getProvidersByCategory(),
+          window.electronAPI.getProviderPreferences(),
+          window.electronAPI.getProviderStatistics(),
+          window.electronAPI.getBudgetStatus(),
+          window.electronAPI.getProviderRecommendations(),
+        ]);
 
       setProviders(providersData);
       setPreferences(preferencesData);
@@ -65,23 +72,35 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'completely_free': return '🆓';
-      case 'free_trial': return '🎁';
-      case 'freemium': return '⚡';
-      case 'premium_optional': return '💎';
-      case 'specialized': return '🔧';
-      default: return '📊';
+      case 'completely_free':
+        return '🆓';
+      case 'free_trial':
+        return '🎁';
+      case 'freemium':
+        return '⚡';
+      case 'premium_optional':
+        return '💎';
+      case 'specialized':
+        return '🔧';
+      default:
+        return '📊';
     }
   };
 
   const getTierBadge = (tier: string) => {
     switch (tier) {
-      case 'local': return <span className="tier-badge local">💻 Local</span>;
-      case 'free_cloud': return <span className="tier-badge free-cloud">☁️ Free Cloud</span>;
-      case 'free_credits': return <span className="tier-badge free-credits">🎁 Free Credits</span>;
-      case 'freemium': return <span className="tier-badge freemium">⚡ Freemium</span>;
-      case 'premium': return <span className="tier-badge premium">💎 Premium</span>;
-      default: return <span className="tier-badge unknown">❓ Unknown</span>;
+      case 'local':
+        return <span className="tier-badge local">💻 Local</span>;
+      case 'free_cloud':
+        return <span className="tier-badge free-cloud">☁️ Free Cloud</span>;
+      case 'free_credits':
+        return <span className="tier-badge free-credits">🎁 Free Credits</span>;
+      case 'freemium':
+        return <span className="tier-badge freemium">⚡ Freemium</span>;
+      case 'premium':
+        return <span className="tier-badge premium">💎 Premium</span>;
+      default:
+        return <span className="tier-badge unknown">❓ Unknown</span>;
     }
   };
 
@@ -106,37 +125,39 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
       <div className="panel-header">
         <h2>🚀 Comprehensive AI Vision Configuration (2025 Edition)</h2>
         {onClose && (
-          <button className="close-button" onClick={onClose}>✕</button>
+          <button className="close-button" onClick={onClose}>
+            ✕
+          </button>
         )}
       </div>
 
       {/* Tab Navigation */}
       <div className="tab-navigation">
-        <button 
+        <button
           className={`tab ${activeTab === 'providers' ? 'active' : ''}`}
           onClick={() => setActiveTab('providers')}
         >
           🔍 Providers
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'preferences' ? 'active' : ''}`}
           onClick={() => setActiveTab('preferences')}
         >
           ⚙️ Preferences
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'budget' ? 'active' : ''}`}
           onClick={() => setActiveTab('budget')}
         >
           💰 Budget
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
           onClick={() => setActiveTab('analytics')}
         >
           📊 Analytics
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'recommendations' ? 'active' : ''}`}
           onClick={() => setActiveTab('recommendations')}
         >
@@ -149,29 +170,33 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
         <div className="tab-content">
           <div className="providers-overview">
             <h3>📋 Available Providers ({Object.values(providers).flat().length} total)</h3>
-            
+
             {Object.entries(providers).map(([category, categoryProviders]) => (
               <div key={category} className="provider-category">
                 <h4>
-                  {getCategoryIcon(category)} {category.replace('_', ' ').toUpperCase()} 
+                  {getCategoryIcon(category)} {category.replace('_', ' ').toUpperCase()}
                   <span className="provider-count">({categoryProviders.length})</span>
                 </h4>
-                
+
                 <div className="providers-grid">
                   {categoryProviders.map((provider) => (
                     <div key={provider.id} className="provider-card">
                       <div className="provider-header">
                         <h5>{provider.name}</h5>
                         {getTierBadge(provider.tier)}
-                        <span className={`availability ${provider.isAvailable ? 'available' : 'unavailable'}`}>
+                        <span
+                          className={`availability ${provider.isAvailable ? 'available' : 'unavailable'}`}
+                        >
                           {provider.isAvailable ? '✅' : '❌'}
                         </span>
                       </div>
-                      
+
                       <div className="provider-details">
                         <div className="detail-row">
                           <span>Quality:</span>
-                          <span>{getQualityStars(provider.qualityScore)} ({provider.qualityScore}/10)</span>
+                          <span>
+                            {getQualityStars(provider.qualityScore)} ({provider.qualityScore}/10)
+                          </span>
                         </div>
                         <div className="detail-row">
                           <span>Speed:</span>
@@ -194,15 +219,21 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="provider-capabilities">
                         {provider.supportsOCR && <span className="capability">📝 OCR</span>}
                         {provider.supportsUIAnalysis && <span className="capability">🖥️ UI</span>}
-                        {provider.supportsDocumentAnalysis && <span className="capability">📄 Docs</span>}
-                        {provider.supportsObjectDetection && <span className="capability">🎯 Objects</span>}
-                        {provider.supportsSceneAnalysis && <span className="capability">🌄 Scenes</span>}
+                        {provider.supportsDocumentAnalysis && (
+                          <span className="capability">📄 Docs</span>
+                        )}
+                        {provider.supportsObjectDetection && (
+                          <span className="capability">🎯 Objects</span>
+                        )}
+                        {provider.supportsSceneAnalysis && (
+                          <span className="capability">🌄 Scenes</span>
+                        )}
                       </div>
-                      
+
                       <div className="provider-description">
                         <p>{provider.description}</p>
                       </div>
@@ -220,7 +251,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
         <div className="tab-content">
           <div className="preferences-section">
             <h3>⚙️ Provider Preferences</h3>
-            
+
             <div className="preference-group">
               <h4>🎯 Operation Mode</h4>
               <div className="radio-group">
@@ -268,7 +299,9 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                     max="10"
                     step="0.1"
                     value={preferences.qualityThreshold}
-                    onChange={(e) => updatePreferences({ qualityThreshold: parseFloat(e.target.value) })}
+                    onChange={(e) =>
+                      updatePreferences({ qualityThreshold: parseFloat(e.target.value) })
+                    }
                   />
                 </label>
                 <label>
@@ -279,7 +312,9 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                     max="10000"
                     step="100"
                     value={preferences.speedThreshold}
-                    onChange={(e) => updatePreferences({ speedThreshold: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      updatePreferences({ speedThreshold: parseInt(e.target.value) })
+                    }
                   />
                 </label>
               </div>
@@ -288,7 +323,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
             <div className="preference-group">
               <h4>🌍 Regional Preferences</h4>
               <div className="checkbox-group">
-                {['global', 'us', 'eu', 'asia'].map(region => (
+                {['global', 'us', 'eu', 'asia'].map((region) => (
                   <label key={region}>
                     <input
                       type="checkbox"
@@ -296,7 +331,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                       onChange={(e) => {
                         const regions = e.target.checked
                           ? [...preferences.preferredRegions, region]
-                          : preferences.preferredRegions.filter(r => r !== region);
+                          : preferences.preferredRegions.filter((r) => r !== region);
                         updatePreferences({ preferredRegions: regions });
                       }}
                     />
@@ -326,7 +361,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
         <div className="tab-content">
           <div className="budget-section">
             <h3>💰 Budget Control</h3>
-            
+
             <div className="budget-overview">
               <div className="budget-card">
                 <h4>Monthly Budget</h4>
@@ -342,7 +377,9 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
               </div>
               <div className="budget-card">
                 <h4>Projected</h4>
-                <div className="budget-amount">${budgetControl.projectedMonthlySpend.toFixed(2)}</div>
+                <div className="budget-amount">
+                  ${budgetControl.projectedMonthlySpend.toFixed(2)}
+                </div>
               </div>
             </div>
 
@@ -356,11 +393,13 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                     min="0"
                     step="1"
                     value={preferences.maxMonthlyBudget}
-                    onChange={(e) => updatePreferences({ maxMonthlyBudget: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      updatePreferences({ maxMonthlyBudget: parseFloat(e.target.value) || 0 })
+                    }
                   />
                 </label>
               </div>
-              
+
               <div className="budget-presets">
                 <h5>Quick Presets:</h5>
                 <button onClick={() => updatePreferences({ maxMonthlyBudget: 0 })}>
@@ -398,21 +437,29 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
         <div className="tab-content">
           <div className="analytics-section">
             <h3>📊 Usage Analytics</h3>
-            
+
             <div className="analytics-overview">
               <div className="analytics-summary">
                 <div className="summary-card">
                   <h4>Total Requests</h4>
                   <div className="summary-value">
-                    {Array.from(usageStats.values()).reduce((sum, stat) => sum + stat.requestCount, 0).toLocaleString()}
+                    {Array.from(usageStats.values())
+                      .reduce((sum, stat) => sum + stat.requestCount, 0)
+                      .toLocaleString()}
                   </div>
                 </div>
                 <div className="summary-card">
                   <h4>Success Rate</h4>
                   <div className="summary-value">
                     {(() => {
-                      const total = Array.from(usageStats.values()).reduce((sum, stat) => sum + stat.requestCount, 0);
-                      const success = Array.from(usageStats.values()).reduce((sum, stat) => sum + stat.successCount, 0);
+                      const total = Array.from(usageStats.values()).reduce(
+                        (sum, stat) => sum + stat.requestCount,
+                        0
+                      );
+                      const success = Array.from(usageStats.values()).reduce(
+                        (sum, stat) => sum + stat.successCount,
+                        0
+                      );
                       return total > 0 ? `${Math.round((success / total) * 100)}%` : '0%';
                     })()}
                   </div>
@@ -420,15 +467,21 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                 <div className="summary-card">
                   <h4>Total Cost</h4>
                   <div className="summary-value">
-                    ${Array.from(usageStats.values()).reduce((sum, stat) => sum + stat.totalCost, 0).toFixed(2)}
+                    $
+                    {Array.from(usageStats.values())
+                      .reduce((sum, stat) => sum + stat.totalCost, 0)
+                      .toFixed(2)}
                   </div>
                 </div>
                 <div className="summary-card">
                   <h4>Avg Response Time</h4>
                   <div className="summary-value">
                     {(() => {
-                      const stats = Array.from(usageStats.values()).filter(s => s.requestCount > 0);
-                      const avgTime = stats.reduce((sum, stat) => sum + stat.avgResponseTime, 0) / stats.length;
+                      const stats = Array.from(usageStats.values()).filter(
+                        (s) => s.requestCount > 0
+                      );
+                      const avgTime =
+                        stats.reduce((sum, stat) => sum + stat.avgResponseTime, 0) / stats.length;
                       return formatResponseTime(avgTime || 0);
                     })()}
                   </div>
@@ -452,10 +505,9 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                     <span>{providerId}</span>
                     <span>{stats.requestCount.toLocaleString()}</span>
                     <span>
-                      {stats.requestCount > 0 
+                      {stats.requestCount > 0
                         ? `${Math.round((stats.successCount / stats.requestCount) * 100)}%`
-                        : '0%'
-                      }
+                        : '0%'}
                     </span>
                     <span>{formatResponseTime(stats.avgResponseTime)}</span>
                     <span>${stats.totalCost.toFixed(2)}</span>
@@ -473,7 +525,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
         <div className="tab-content">
           <div className="recommendations-section">
             <h3>🎯 Provider Recommendations</h3>
-            
+
             {Object.entries(recommendations).map(([useCase, providers]) => (
               <div key={useCase} className="recommendation-group">
                 <h4>
@@ -483,7 +535,7 @@ const EnhancedConfigPanel: React.FC<EnhancedConfigPanelProps> = ({ onClose }) =>
                   {useCase === 'document_analysis' && '📄 Document Analysis'}
                   {useCase === 'ui_analysis' && '🖥️ UI Analysis'}
                 </h4>
-                
+
                 <div className="recommendation-list">
                   {providers.slice(0, 3).map((provider, index) => (
                     <div key={provider.id} className="recommendation-item">
