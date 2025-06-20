@@ -53,6 +53,13 @@ const ConfigPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'keys' | 'free' | 'settings' | 'stats'>('keys');
 
   useEffect(() => {
+    // Check if electronAPI is available before making calls
+    if (!window.electronAPI) {
+      console.warn('⚠️ ConfigPanel: electronAPI not available, skipping data loading');
+      return;
+    }
+
+    console.log('🔧 ConfigPanel: Loading configuration data...');
     loadSettings();
     loadAPIKeyStatus();
     loadFreeProviders();
@@ -60,9 +67,11 @@ const ConfigPanel: React.FC = () => {
 
     // Refresh data every 30 seconds
     const interval = setInterval(() => {
-      loadAPIKeyStatus();
-      loadFreeProviders();
-      loadUsageStats();
+      if (window.electronAPI) {
+        loadAPIKeyStatus();
+        loadFreeProviders();
+        loadUsageStats();
+      }
     }, 30000);
 
     return () => clearInterval(interval);
@@ -70,39 +79,46 @@ const ConfigPanel: React.FC = () => {
 
   const loadSettings = async () => {
     try {
+      if (!window.electronAPI) {
+        console.warn('electronAPI not available for loadSettings');
+        return;
+      }
       const savedSettings = await window.electronAPI.getSettings();
       if (savedSettings.processing) {
         setSettings((prev) => ({ ...prev, ...savedSettings.processing }));
       }
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error('❌ Failed to load settings:', error);
     }
   };
 
   const loadAPIKeyStatus = async () => {
     try {
+      if (!window.electronAPI) return;
       const status = await window.electronAPI.getAPIKeyStatus();
       setApiKeyStatus(status);
     } catch (error) {
-      console.error('Failed to load API key status:', error);
+      console.error('❌ Failed to load API key status:', error);
     }
   };
 
   const loadFreeProviders = async () => {
     try {
+      if (!window.electronAPI) return;
       const providers = await window.electronAPI.getFreeProviderStatus();
       setFreeProviders(providers);
     } catch (error) {
-      console.error('Failed to load free providers:', error);
+      console.error('❌ Failed to load free providers:', error);
     }
   };
 
   const loadUsageStats = async () => {
     try {
+      if (!window.electronAPI) return;
       const stats = await window.electronAPI.getUsageStatistics();
       setUsageStats(new Map(Object.entries(stats)));
     } catch (error) {
-      console.error('Failed to load usage statistics:', error);
+      console.error('❌ Failed to load usage statistics:', error);
     }
   };
 

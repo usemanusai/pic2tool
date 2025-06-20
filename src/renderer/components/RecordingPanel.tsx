@@ -24,13 +24,27 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
   const [loadingSources, setLoadingSources] = useState(false);
 
   useEffect(() => {
-    loadSources();
+    // Wait a bit for electronAPI to be available
+    const timer = setTimeout(() => {
+      loadSources();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const loadSources = async () => {
     try {
       setLoadingSources(true);
+
+      // Check if electronAPI is available
+      if (!window.electronAPI) {
+        console.warn('electronAPI not available, skipping source loading');
+        return;
+      }
+
+      console.log('🔍 Loading recording sources...');
       const availableSources = await window.electronAPI.getSources();
+      console.log('✅ Sources loaded:', availableSources.length);
       setSources(availableSources);
 
       // Auto-select the first screen source
@@ -41,9 +55,11 @@ const RecordingPanel: React.FC<RecordingPanelProps> = ({
       );
       if (screenSource) {
         setSelectedSource(screenSource.id);
+        console.log('✅ Auto-selected screen source:', screenSource.name);
       }
     } catch (error) {
-      console.error('Failed to load sources:', error);
+      console.error('❌ Failed to load sources:', error);
+      // Don't throw the error, just log it
     } finally {
       setLoadingSources(false);
     }
