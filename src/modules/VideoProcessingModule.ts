@@ -1,8 +1,9 @@
-import ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as log from 'electron-log';
 import { Jimp } from 'jimp';
+import { spawn } from 'child_process';
+import ffmpegPath from 'ffmpeg-static';
 
 export interface FrameInfo {
   path: string;
@@ -32,22 +33,11 @@ export class VideoProcessingModule {
   }
 
   private setupFFmpeg(): void {
-    // Try to find FFmpeg in common locations
-    const possiblePaths = [
-      'ffmpeg', // If in PATH
-      'C:\\ffmpeg\\bin\\ffmpeg.exe',
-      'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
-      path.join(process.cwd(), 'ffmpeg', 'ffmpeg.exe'),
-    ];
-
-    for (const ffmpegPath of possiblePaths) {
-      try {
-        ffmpeg.setFfmpegPath(ffmpegPath);
-        log.info('FFmpeg path set to:', ffmpegPath);
-        break;
-      } catch (error) {
-        log.warn('FFmpeg not found at:', ffmpegPath);
-      }
+    // ffmpeg-static provides the path to the static binary
+    if (ffmpegPath) {
+      log.info('FFmpeg static binary available at:', ffmpegPath);
+    } else {
+      log.warn('FFmpeg static binary not available');
     }
   }
 
@@ -95,12 +85,45 @@ export class VideoProcessingModule {
 
   private async getVideoInfo(videoPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      ffmpeg.ffprobe(videoPath, (err, metadata) => {
-        if (err) {
-          reject(err);
+      if (!ffmpegPath) {
+        reject(new Error('FFmpeg not available'));
+        return;
+      }
+
+      const ffprobe = spawn(ffmpegPath.replace('ffmpeg', 'ffprobe'), [
+        '-v', 'quiet',
+        '-print_format', 'json',
+        '-show_format',
+        '-show_streams',
+        videoPath
+      ]);
+
+      let output = '';
+      let errorOutput = '';
+
+      ffprobe.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      ffprobe.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+
+      ffprobe.on('close', (code) => {
+        if (code === 0) {
+          try {
+            const metadata = JSON.parse(output);
+            resolve(metadata);
+          } catch (parseError) {
+            reject(new Error(`Failed to parse ffprobe output: ${parseError}`));
+          }
         } else {
-          resolve(metadata);
+          reject(new Error(`ffprobe failed with code ${code}: ${errorOutput}`));
         }
+      });
+
+      ffprobe.on('error', (error) => {
+        reject(error);
       });
     });
   }
@@ -111,44 +134,66 @@ export class VideoProcessingModule {
     frameRate: number
   ): Promise<FrameInfo[]> {
     return new Promise((resolve, reject) => {
+      if (!ffmpegPath) {
+        reject(new Error('FFmpeg not available'));
+        return;
+      }
+
       const frames: FrameInfo[] = [];
-      let frameIndex = 0;
+      const outputPattern = path.join(outputDir, 'frame_%04d.png');
 
-      ffmpeg(videoPath)
-        .outputOptions([
-          `-vf fps=${frameRate}`,
-          '-q:v 2', // High quality
-        ])
-        .output(path.join(outputDir, 'frame_%04d.png'))
-        .on('start', (commandLine) => {
-          log.info('FFmpeg command:', commandLine);
-        })
-        .on('progress', (progress) => {
-          log.debug('Processing progress:', progress.percent);
-        })
-        .on('end', () => {
-          // Read the generated frames
-          const frameFiles = fs
-            .readdirSync(outputDir)
-            .filter((file) => file.startsWith('frame_') && file.endsWith('.png'))
-            .sort();
+      const ffmpegProcess = spawn(ffmpegPath, [
+        '-i', videoPath,
+        '-vf', `fps=${frameRate}`,
+        '-q:v', '2', // High quality
+        '-y', // Overwrite output files
+        outputPattern
+      ]);
 
-          frameFiles.forEach((file, index) => {
-            frames.push({
-              path: path.join(outputDir, file),
-              timestamp: index / frameRate,
-              index: index,
+      let errorOutput = '';
+
+      ffmpegProcess.stderr.on('data', (data) => {
+        const output = data.toString();
+        errorOutput += output;
+
+        // Log progress if available
+        if (output.includes('frame=')) {
+          log.debug('FFmpeg progress:', output.trim());
+        }
+      });
+
+      ffmpegProcess.on('close', (code) => {
+        if (code === 0) {
+          try {
+            // Read the generated frames
+            const frameFiles = fs
+              .readdirSync(outputDir)
+              .filter((file) => file.startsWith('frame_') && file.endsWith('.png'))
+              .sort();
+
+            frameFiles.forEach((file, index) => {
+              frames.push({
+                path: path.join(outputDir, file),
+                timestamp: index / frameRate,
+                index: index,
+              });
             });
-          });
 
-          log.info(`Extracted ${frames.length} raw frames`);
-          resolve(frames);
-        })
-        .on('error', (err) => {
-          log.error('FFmpeg error:', err);
-          reject(err);
-        })
-        .run();
+            log.info(`Extracted ${frames.length} raw frames`);
+            resolve(frames);
+          } catch (error) {
+            reject(new Error(`Failed to read extracted frames: ${error}`));
+          }
+        } else {
+          reject(new Error(`FFmpeg failed with code ${code}: ${errorOutput}`));
+        }
+      });
+
+      ffmpegProcess.on('error', (error) => {
+        reject(error);
+      });
+
+      log.info('Starting frame extraction with FFmpeg');
     });
   }
 
@@ -270,31 +315,64 @@ export class VideoProcessingModule {
     format: string = 'mp4'
   ): Promise<string> {
     return new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .output(outputPath)
-        .format(format)
-        .on('end', () => {
+      if (!ffmpegPath) {
+        reject(new Error('FFmpeg not available'));
+        return;
+      }
+
+      const ffmpegProcess = spawn(ffmpegPath, [
+        '-i', inputPath,
+        '-f', format,
+        '-y', // Overwrite output files
+        outputPath
+      ]);
+
+      let errorOutput = '';
+
+      ffmpegProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+
+      ffmpegProcess.on('close', (code) => {
+        if (code === 0) {
           log.info('Video conversion completed:', outputPath);
           resolve(outputPath);
-        })
-        .on('error', (err) => {
-          log.error('Video conversion error:', err);
-          reject(err);
-        })
-        .run();
+        } else {
+          log.error('Video conversion error:', errorOutput);
+          reject(new Error(`FFmpeg failed with code ${code}: ${errorOutput}`));
+        }
+      });
+
+      ffmpegProcess.on('error', (error) => {
+        log.error('Video conversion error:', error);
+        reject(error);
+      });
     });
   }
 
   public async getVideoMetadata(videoPath: string): Promise<any> {
     try {
       const info = await this.getVideoInfo(videoPath);
+      const videoStream = info.streams.find((stream: any) => stream.codec_type === 'video');
+
+      if (!videoStream) {
+        throw new Error('No video stream found');
+      }
+
+      // Safely parse frame rate
+      let frameRate = 0;
+      if (videoStream.r_frame_rate) {
+        const [num, den] = videoStream.r_frame_rate.split('/').map(Number);
+        frameRate = den ? num / den : num;
+      }
+
       return {
-        duration: info.format.duration,
-        width: info.streams[0].width,
-        height: info.streams[0].height,
-        frameRate: eval(info.streams[0].r_frame_rate),
-        format: info.format.format_name,
-        size: info.format.size,
+        duration: parseFloat(info.format.duration) || 0,
+        width: videoStream.width || 0,
+        height: videoStream.height || 0,
+        frameRate: frameRate,
+        format: info.format.format_name || 'unknown',
+        size: parseInt(info.format.size) || 0,
       };
     } catch (error) {
       log.error('Error getting video metadata:', error);
