@@ -155,16 +155,7 @@ module.exports = [
       compress: true,
     },
     optimization: {
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      },
+      splitChunks: false, // Disable code splitting for Electron renderer to avoid chunk conflicts
     },
   },
 ];
