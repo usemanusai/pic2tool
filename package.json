@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Transform screen recordings into executable code using AI vision analysis",
   "main": "dist/main.js",
+  "type": "commonjs",
   "homepage": "./",
   "scripts": {
     "setup": "node scripts/interactive-setup.js",

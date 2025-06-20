@@ -63,7 +63,7 @@ export class CodeGenerationModule {
 
   private async generateScript(
     sequence: ActionSequence,
-    projectPath: string
+    _projectPath: string
   ): Promise<GeneratedCode> {
     const scriptContent = this.generatePythonScript(sequence);
     const requirementsContent = this.generateRequirements(['pyautogui', 'time', 'logging']);
@@ -96,7 +96,7 @@ export class CodeGenerationModule {
 
   private async generateApplication(
     sequence: ActionSequence,
-    projectPath: string
+    _projectPath: string
   ): Promise<GeneratedCode> {
     const files: GeneratedFile[] = [];
 
@@ -227,13 +227,14 @@ export class CodeGenerationModule {
           `logger.info("Typed: ${step.value || ''}")`,
         ].join('\n    ');
 
-      case 'scroll':
+      case 'scroll': {
         const scrollAmount = step.value === 'up' ? 3 : -3;
         return [
           comment,
           `pyautogui.scroll(${scrollAmount})`,
           `logger.info("Scrolled ${step.value}")`,
         ].join('\n    ');
+      }
 
       case 'wait':
         return [

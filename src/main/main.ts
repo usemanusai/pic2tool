@@ -1,6 +1,5 @@
 import { app, BrowserWindow, ipcMain, desktopCapturer, dialog, shell } from 'electron';
 import * as path from 'path';
-import * as fs from 'fs';
 import * as log from 'electron-log';
 import { SettingsManager } from '../shared/SettingsManager';
 import { errorHandler } from '../shared/ErrorHandler';
@@ -50,11 +49,18 @@ class AutomatedDevelopmentRecorder {
     });
 
     // Load the React app
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && process.env.WEBPACK_DEV_SERVER === 'true') {
       await this.mainWindow.loadURL('http://localhost:3000');
       this.mainWindow.webContents.openDevTools();
     } else {
-      await this.mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+      // Load the built HTML file from dist directory
+      const htmlPath = path.join(__dirname, 'index.html');
+      await this.mainWindow.loadFile(htmlPath);
+
+      // Open dev tools in development mode even when not using dev server
+      if (process.env.NODE_ENV === 'development') {
+        this.mainWindow.webContents.openDevTools();
+      }
     }
 
     this.mainWindow.on('closed', () => {
@@ -195,7 +201,7 @@ class AutomatedDevelopmentRecorder {
       }
     });
 
-    ipcMain.handle('get-api-key-status', async (event) => {
+    ipcMain.handle('get-api-key-status', async (_event) => {
       try {
         const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
         const visionModule = new VisionAnalysisModule();
@@ -206,7 +212,7 @@ class AutomatedDevelopmentRecorder {
       }
     });
 
-    ipcMain.handle('get-free-provider-status', async (event) => {
+    ipcMain.handle('get-free-provider-status', async (_event) => {
       try {
         const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
         const visionModule = new VisionAnalysisModule();
@@ -425,7 +431,7 @@ class AutomatedDevelopmentRecorder {
     });
   }
 
-  private sendToRenderer(channel: string, data: any): void {
+  private sendToRenderer(channel: string, data: unknown): void {
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
       this.mainWindow.webContents.send(channel, data);
     }
