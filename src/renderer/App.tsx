@@ -4,6 +4,7 @@ import Header from './components/Header';
 import MainContent from './components/MainContent';
 import StatusBar from './components/StatusBar';
 import ErrorBoundary from './components/ErrorBoundary';
+import { waitForElectronAPI, logElectronAPIStatus } from './electronAPI-checker';
 
 export interface AppState {
   isRecording: boolean;
@@ -38,105 +39,95 @@ const App: React.FC = () => {
 
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Set up IPC listeners
+  const setupListeners = () => {
+    console.log('🎧 Setting up IPC listeners...');
+
+    try {
+      // Recording events
+      window.electronAPI.onRecordingStarted((data: any) => {
+        console.log('📹 Recording started:', data);
+        setAppState((prev) => ({
+          ...prev,
+          isRecording: true,
+          error: null,
+          progress: { percent: 0, status: 'Recording...' },
+        }));
+      });
+
+      window.electronAPI.onRecordingStopped((data: any) => {
+        console.log('⏹️ Recording stopped:', data);
+        setAppState((prev) => ({
+          ...prev,
+          isRecording: false,
+          progress: { percent: 0, status: 'Recording complete. Ready to process.' },
+        }));
+      });
+
+      // Processing events
+      window.electronAPI.onProcessingProgress((data: any) => {
+        console.log('⚙️ Processing progress:', data);
+        setAppState((prev) => ({
+          ...prev,
+          isProcessing: true,
+          progress: {
+            percent: data.percent,
+            status: data.status,
+          },
+        }));
+      });
+
+      window.electronAPI.onGenerationComplete((data: any) => {
+        console.log('✅ Generation complete:', data);
+        setAppState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          generatedCode: data.code,
+          progress: { percent: 100, status: 'Code generation complete!' },
+        }));
+      });
+
+      window.electronAPI.onProcessingError((data: any) => {
+        console.error('❌ Processing error:', data);
+        setAppState((prev) => ({
+          ...prev,
+          isProcessing: false,
+          error: data.error,
+          progress: { percent: 0, status: 'Error occurred' },
+        }));
+      });
+
+      console.log('✅ All IPC listeners set up successfully');
+    } catch (error) {
+      console.error('❌ Error setting up IPC listeners:', error);
+      setAppState(prev => ({
+        ...prev,
+        error: `Failed to set up IPC listeners: ${error instanceof Error ? error.message : String(error)}`
+      }));
+    }
+  };
+
   useEffect(() => {
     console.log('🔧 App useEffect running...');
 
-    // Check if electronAPI is available
-    if (!window.electronAPI) {
-      console.error('❌ electronAPI not available, waiting...');
-      const checkAPI = setInterval(() => {
-        if (window.electronAPI) {
-          console.log('✅ electronAPI now available!');
-          clearInterval(checkAPI);
-          setIsInitialized(true);
-        }
-      }, 100);
+    // Log initial electronAPI status
+    logElectronAPIStatus();
 
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        clearInterval(checkAPI);
-        if (!window.electronAPI) {
-          console.error('❌ electronAPI timeout - not available after 5 seconds');
-          setAppState(prev => ({
-            ...prev,
-            error: 'Electron API not available. Please restart the application.'
-          }));
-        }
-      }, 5000);
-
-      return () => clearInterval(checkAPI);
-    }
-
-    // Set up IPC listeners
-    const setupListeners = () => {
-      console.log('🎧 Setting up IPC listeners...');
-
-      try {
-        // Recording events
-        window.electronAPI.onRecordingStarted((data: any) => {
-          console.log('📹 Recording started:', data);
-          setAppState((prev) => ({
-            ...prev,
-            isRecording: true,
-            error: null,
-            progress: { percent: 0, status: 'Recording...' },
-          }));
-        });
-
-        window.electronAPI.onRecordingStopped((data: any) => {
-          console.log('⏹️ Recording stopped:', data);
-          setAppState((prev) => ({
-            ...prev,
-            isRecording: false,
-            progress: { percent: 0, status: 'Recording complete. Ready to process.' },
-          }));
-        });
-
-        // Processing events
-        window.electronAPI.onProcessingProgress((data: any) => {
-          console.log('⚙️ Processing progress:', data);
-          setAppState((prev) => ({
-            ...prev,
-            isProcessing: true,
-            progress: {
-              percent: data.percent,
-              status: data.status,
-            },
-          }));
-        });
-
-        window.electronAPI.onGenerationComplete((data: any) => {
-          console.log('✅ Generation complete:', data);
-          setAppState((prev) => ({
-            ...prev,
-            isProcessing: false,
-            generatedCode: data.code,
-            progress: { percent: 100, status: 'Code generation complete!' },
-          }));
-        });
-
-        window.electronAPI.onProcessingError((data: any) => {
-          console.error('❌ Processing error:', data);
-          setAppState((prev) => ({
-            ...prev,
-            isProcessing: false,
-            error: data.error,
-            progress: { percent: 0, status: 'Error occurred' },
-          }));
-        });
-
-        console.log('✅ All IPC listeners set up successfully');
-      } catch (error) {
-        console.error('❌ Error setting up IPC listeners:', error);
+    // Use the comprehensive checker
+    waitForElectronAPI(5000).then(status => {
+      if (status.available) {
+        console.log('✅ ElectronAPI is ready!');
+        console.log('🔍 Available methods:', status.methods);
+        setIsInitialized(true);
+        setupListeners();
+      } else {
+        console.error('❌ ElectronAPI failed to load:', status.error);
         setAppState(prev => ({
           ...prev,
-          error: `Failed to set up IPC listeners: ${error instanceof Error ? error.message : String(error)}`
+          error: `Electron API not available: ${status.error}. Please restart the application.`
         }));
       }
-    };
-
-    setupListeners();
-    setIsInitialized(true);
+    });
 
     // Cleanup listeners on unmount
     return () => {

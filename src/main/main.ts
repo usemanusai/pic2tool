@@ -37,13 +37,20 @@ class AutomatedDevelopmentRecorder {
   }
 
   public async createWindow(): Promise<void> {
+    const preloadPath = path.join(__dirname, 'preload.js');
+    log.info(`Preload script path: ${preloadPath}`);
+    log.info(`Preload script exists: ${require('fs').existsSync(preloadPath)}`);
+    log.info(`Current __dirname: ${__dirname}`);
+
     this.mainWindow = new BrowserWindow({
       width: 1200,
       height: 800,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, '../preload/preload.js'),
+        preload: preloadPath,
+        webSecurity: true,
+        sandbox: false,
       },
       icon: path.join(__dirname, '../../assets/icon.png'), // We'll create this later
     });

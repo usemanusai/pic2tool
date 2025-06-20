@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-console.log('Preload script starting...');
+console.log('🔧 Preload script starting...');
+console.log('🔧 contextBridge available:', !!contextBridge);
+console.log('🔧 ipcRenderer available:', !!ipcRenderer);
 
 // Define the API that will be exposed to the renderer process
 const electronAPI = {
@@ -84,9 +86,14 @@ const electronAPI = {
 };
 
 // Expose the API to the renderer process
-console.log('Exposing electronAPI to main world...');
-contextBridge.exposeInMainWorld('electronAPI', electronAPI);
-console.log('electronAPI exposed successfully');
+console.log('🌉 Exposing electronAPI to main world...');
+try {
+  contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+  console.log('✅ electronAPI exposed successfully');
+  console.log('🔍 electronAPI methods:', Object.keys(electronAPI));
+} catch (error) {
+  console.error('❌ Failed to expose electronAPI:', error);
+}
 
 // Type definitions for TypeScript
 declare global {

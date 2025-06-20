@@ -7,8 +7,18 @@ console.log('🚀 Renderer starting...');
 console.log('🌍 Environment check:', {
   isElectron: typeof window !== 'undefined' && !!window.electronAPI,
   userAgent: navigator.userAgent,
-  location: window.location.href
+  location: window.location.href,
+  windowKeys: Object.keys(window).filter(key => key.includes('electron') || key.includes('API'))
 });
+
+// Check if electronAPI is available immediately
+console.log('🔍 Initial electronAPI check:', !!window.electronAPI);
+if (window.electronAPI) {
+  console.log('✅ electronAPI methods available:', Object.keys(window.electronAPI));
+} else {
+  console.log('❌ electronAPI not available on window object');
+  console.log('🔍 Available window properties:', Object.keys(window).slice(0, 20));
+}
 
 const container = document.getElementById('root');
 if (!container) {
@@ -39,13 +49,16 @@ try {
 
   console.log('✅ App rendered successfully');
 
-  // Add a small delay to check if the app stays mounted
-  setTimeout(() => {
-    console.log('🔍 App status check after 2 seconds:', {
-      containerHasContent: container.children.length > 0,
-      electronAPIAvailable: !!window.electronAPI
-    });
-  }, 2000);
+  // Add multiple checks to see when electronAPI becomes available
+  [100, 500, 1000, 2000, 5000].forEach(delay => {
+    setTimeout(() => {
+      console.log(`🔍 App status check after ${delay}ms:`, {
+        containerHasContent: container.children.length > 0,
+        electronAPIAvailable: !!window.electronAPI,
+        electronAPIMethods: window.electronAPI ? Object.keys(window.electronAPI).length : 0
+      });
+    }, delay);
+  });
 
 } catch (error) {
   console.error('❌ Error rendering React app:', error);
