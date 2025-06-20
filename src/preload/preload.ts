@@ -13,6 +13,15 @@ const electronAPI = {
   // Settings functions
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+
+  // Multi-API Key Management
+  addAPIKey: (provider: string, key: string, options?: any) =>
+    ipcRenderer.invoke('add-api-key', provider, key, options),
+  removeAPIKey: (keyId: string) => ipcRenderer.invoke('remove-api-key', keyId),
+  getAPIKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
+  getFreeProviderStatus: () => ipcRenderer.invoke('get-free-provider-status'),
+  getUsageStatistics: () => ipcRenderer.invoke('get-usage-statistics'),
+  resetDailyUsage: () => ipcRenderer.invoke('reset-daily-usage'),
   
   // Source selection for recording
   getSources: () => ipcRenderer.invoke('get-sources'),

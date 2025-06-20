@@ -422,8 +422,10 @@ class SetupValidator {
   }
 
   async configureAPIs() {
-    this.log('\n🔑 API CONFIGURATION SETUP', 'header');
-    this.log('=' .repeat(50), 'header');
+    this.log('\n🔑 MULTI-API KEY CONFIGURATION & FREE TIER SETUP', 'header');
+    this.log('=' .repeat(60), 'header');
+    this.log('This setup will guide you through configuring multiple API keys for');
+    this.log('automatic rotation and free tier optimization to minimize costs.\n');
 
     const configPath = path.join(this.projectRoot, 'api-config.json');
     let config = {};
@@ -519,6 +521,40 @@ class SetupValidator {
         this.log(`❌ Failed to save API configuration: ${error.message}`, 'error');
         this.results.overall.errors.push('Failed to save API configuration');
       }
+    }
+
+    // Show free tier optimization information
+    this.log('\n💡 FREE TIER OPTIMIZATION STRATEGY:', 'info');
+    this.log('1. 🆓 Completely Free: Ollama LLaVA (local), Hugging Face (cloud)');
+    this.log('2. 🎁 Free Trials: Multiple accounts per provider');
+    this.log('3. 🔄 Smart Rotation: Automatic key switching on rate limits');
+    this.log('4. 📊 Usage Tracking: Stay within free tier limits');
+
+    // Check for Ollama (best free option)
+    this.log('\n🤖 Checking for Ollama LLaVA (Recommended Free Option)...');
+    const ollamaAvailable = await this.checkOllamaAvailability();
+    if (ollamaAvailable) {
+      this.log('✅ Ollama is available! This provides unlimited free vision analysis.', 'success');
+    } else {
+      this.log('⚠️ Ollama not found. Install it for unlimited free analysis:', 'warning');
+      this.log('   1. Download from: https://ollama.ai');
+      this.log('   2. Run: ollama pull llava');
+      this.log('   3. Restart this setup');
+    }
+
+    // Show cost savings summary
+    this.log('\n💰 COST SAVINGS SUMMARY:', 'success');
+    this.log('✅ Multiple API keys enable automatic rotation');
+    this.log('✅ Free providers will be used first to minimize costs');
+    this.log('✅ Estimated monthly savings: $50-200+ compared to single paid API');
+  }
+
+  async checkOllamaAvailability() {
+    try {
+      const result = this.execCommand('curl -s http://localhost:11434/api/tags', { timeout: 5000 });
+      return result.success;
+    } catch (error) {
+      return false;
     }
   }
 

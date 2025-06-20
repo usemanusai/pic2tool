@@ -167,9 +167,12 @@ class AutomatedDevelopmentRecorder {
       }
     });
 
-    ipcMain.handle('add-api-key', (event, service, key, name) => {
+    // Multi-API Key Management
+    ipcMain.handle('add-api-key', async (event, provider, key, options) => {
       try {
-        const id = settingsManager.addApiKey(service, key, name);
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        const id = await visionModule.addAPIKey(provider, key, options);
         return id;
       } catch (error) {
         const appError = errorHandler.handleError(error, 'add-api-key');
@@ -177,12 +180,60 @@ class AutomatedDevelopmentRecorder {
       }
     });
 
-    ipcMain.handle('remove-api-key', (event, id) => {
+    ipcMain.handle('remove-api-key', async (event, keyId) => {
       try {
-        settingsManager.removeApiKey(id);
-        return true;
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        const success = await visionModule.removeAPIKey(keyId);
+        return success;
       } catch (error) {
         const appError = errorHandler.handleError(error, 'remove-api-key');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-api-key-status', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.getAPIKeyStatus();
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-api-key-status');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-free-provider-status', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.getFreeProviderStatus();
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-free-provider-status');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-usage-statistics', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        const stats = visionModule.getUsageStatistics();
+        return Object.fromEntries(stats);
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-usage-statistics');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('reset-daily-usage', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        visionModule.resetDailyUsage();
+        return true;
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'reset-daily-usage');
         throw appError;
       }
     });
