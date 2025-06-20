@@ -46,7 +46,7 @@ module.exports = [
       'electron': 'commonjs electron',
       'electron-log': 'commonjs electron-log',
       'electron-store': 'commonjs electron-store',
-      'fluent-ffmpeg': 'commonjs fluent-ffmpeg',
+      'ffmpeg-static': 'commonjs ffmpeg-static',
       'sharp': 'commonjs sharp',
       'jimp': 'commonjs jimp',
     },
