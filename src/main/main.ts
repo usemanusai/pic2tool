@@ -272,7 +272,17 @@ class AutomatedDevelopmentRecorder {
         const sources = await desktopCapturer.getSources({
           types: ['window', 'screen'],
         });
-        return sources;
+
+        // Add a test source for development/testing
+        const testSource = {
+          id: 'test',
+          name: '🎬 Test Recording (Demo Video)',
+          thumbnail: Buffer.alloc(0), // Empty buffer for thumbnail
+          display_id: '',
+          appIcon: null
+        };
+
+        return [testSource, ...sources];
       } catch (error) {
         log.error('Error getting sources:', error);
         throw error;
