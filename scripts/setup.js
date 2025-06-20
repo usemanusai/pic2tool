@@ -459,7 +459,9 @@ class SetupValidator {
           this.log('✅ OpenAI API key validated successfully', 'success');
           this.results.apiConfig.openai = { configured: true, valid: true };
         } else {
-          this.log(`❌ OpenAI API validation failed: ${testResult.error}`, 'error');
+          this.log(`⚠️ OpenAI API validation failed: ${testResult.error}`, 'warning');
+          this.log('   This may be due to rate limiting, network issues, or invalid key', 'warning');
+          this.log('   You can test the API key manually in the application', 'warning');
           this.results.apiConfig.openai = { configured: true, valid: false };
           this.results.overall.warnings.push('OpenAI API key validation failed');
         }
@@ -493,7 +495,9 @@ class SetupValidator {
           this.log('✅ Google Vision API key validated successfully', 'success');
           this.results.apiConfig.google = { configured: true, valid: true };
         } else {
-          this.log(`❌ Google Vision API validation failed: ${testResult.error}`, 'error');
+          this.log(`⚠️ Google Vision API validation failed: ${testResult.error}`, 'warning');
+          this.log('   This may be due to permissions, network issues, or invalid key', 'warning');
+          this.log('   You can test the API key manually in the application', 'warning');
           this.results.apiConfig.google = { configured: true, valid: false };
           this.results.overall.warnings.push('Google Vision API key validation failed');
         }

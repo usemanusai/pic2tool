@@ -140,7 +140,8 @@ class AutomatedDevelopmentRecorder {
         return generatedCode;
       } catch (error) {
         log.error('Error processing video:', error);
-        this.sendToRenderer('processing-error', { error: error.message });
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.sendToRenderer('processing-error', { error: errorMessage });
         throw error;
       }
     });
@@ -270,8 +271,8 @@ app.on('window-all-closed', () => {
 
 // Security: Prevent new window creation
 app.on('web-contents-created', (event, contents) => {
-  contents.on('new-window', (event, navigationUrl) => {
-    event.preventDefault();
-    log.warn('Blocked new window creation to:', navigationUrl);
+  contents.setWindowOpenHandler(({ url }) => {
+    log.warn('Blocked new window creation to:', url);
+    return { action: 'deny' };
   });
 });
