@@ -36,17 +36,18 @@ export class FreeVisionAPIProvider {
         isLocal: true,
         isAvailable: false,
         maxImageSize: 10 * 1024 * 1024, // 10MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
 
       // New 2025 Free Cloud Providers (high priority)
       {
         name: 'Google Gemini 2.5 Flash Free',
-        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+        endpoint:
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
         isLocal: false,
         isAvailable: false,
         maxImageSize: 20 * 1024 * 1024, // 20MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
       {
         name: 'OpenRouter Qwen2.5-VL Free',
@@ -54,7 +55,7 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 10 * 1024 * 1024, // 10MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
       {
         name: 'Groq LLaVA Free',
@@ -62,7 +63,7 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 8 * 1024 * 1024, // 8MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
       {
         name: 'Together AI Vision Free',
@@ -70,7 +71,7 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 10 * 1024 * 1024, // 10MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
       {
         name: 'Fireworks AI Vision Free',
@@ -78,7 +79,7 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 8 * 1024 * 1024, // 8MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
       {
         name: 'DeepInfra Vision Free',
@@ -86,17 +87,18 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 10 * 1024 * 1024, // 10MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
       },
 
       // Existing providers (lower priority)
       {
         name: 'Hugging Face Inference API',
-        endpoint: 'https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large',
+        endpoint:
+          'https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large',
         isLocal: false,
         isAvailable: false,
         maxImageSize: 5 * 1024 * 1024, // 5MB
-        supportedFormats: ['jpg', 'jpeg', 'png']
+        supportedFormats: ['jpg', 'jpeg', 'png'],
       },
       {
         name: 'Azure Computer Vision Free Tier',
@@ -104,7 +106,7 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 4 * 1024 * 1024, // 4MB
-        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp']
+        supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp'],
       },
       {
         name: 'AWS Rekognition Free Tier',
@@ -112,8 +114,8 @@ export class FreeVisionAPIProvider {
         isLocal: false,
         isAvailable: false,
         maxImageSize: 5 * 1024 * 1024, // 5MB
-        supportedFormats: ['jpg', 'jpeg', 'png']
-      }
+        supportedFormats: ['jpg', 'jpeg', 'png'],
+      },
     ];
     this.currentProviderIndex = 0;
     this.checkProviderAvailability();
@@ -124,7 +126,7 @@ export class FreeVisionAPIProvider {
    */
   async analyzeImage(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
     const startTime = Date.now();
-    
+
     // Try each available provider
     for (let i = 0; i < this.providers.length; i++) {
       const provider = this.getNextAvailableProvider();
@@ -148,21 +150,30 @@ export class FreeVisionAPIProvider {
   /**
    * Analyze image with Ollama LLaVA (local)
    */
-  private async analyzeWithOllama(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithOllama(
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
-    const response = await axios.post('http://localhost:11434/api/generate', {
-      model: 'llava',
-      prompt: analysisPrompt,
-      images: [base64Image],
-      stream: false
-    }, {
-      timeout: 30000,
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await axios.post(
+      'http://localhost:11434/api/generate',
+      {
+        model: 'llava',
+        prompt: analysisPrompt,
+        images: [base64Image],
+        stream: false,
+      },
+      {
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    });
+    );
 
     return {
       description: response.data.response,
@@ -171,8 +182,8 @@ export class FreeVisionAPIProvider {
       processingTime: 0,
       metadata: {
         model: 'llava',
-        local: true
-      }
+        local: true,
+      },
     };
   }
 
@@ -186,12 +197,14 @@ export class FreeVisionAPIProvider {
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/octet-stream'
-        }
+          'Content-Type': 'application/octet-stream',
+        },
       }
     );
 
-    const caption = Array.isArray(response.data) ? response.data[0]?.generated_text : response.data.generated_text;
+    const caption = Array.isArray(response.data)
+      ? response.data[0]?.generated_text
+      : response.data.generated_text;
 
     return {
       description: caption || 'Unable to generate description',
@@ -200,8 +213,8 @@ export class FreeVisionAPIProvider {
       processingTime: 0,
       metadata: {
         model: 'Salesforce/blip-image-captioning-large',
-        free: true
-      }
+        free: true,
+      },
     };
   }
 
@@ -216,12 +229,13 @@ export class FreeVisionAPIProvider {
         timeout: 30000,
         headers: {
           'Ocp-Apim-Subscription-Key': apiKey,
-          'Content-Type': 'application/octet-stream'
-        }
+          'Content-Type': 'application/octet-stream',
+        },
       }
     );
 
-    const description = response.data.description?.captions?.[0]?.text || 'No description available';
+    const description =
+      response.data.description?.captions?.[0]?.text || 'No description available';
     const confidence = response.data.description?.captions?.[0]?.confidence || 0.5;
 
     return {
@@ -232,15 +246,20 @@ export class FreeVisionAPIProvider {
       metadata: {
         tags: response.data.tags,
         objects: response.data.objects,
-        text: response.data.readResult
-      }
+        text: response.data.readResult,
+      },
     };
   }
 
   /**
    * Analyze image with AWS Rekognition Free Tier
    */
-  private async analyzeWithAWS(imageData: Buffer, accessKey: string, secretKey: string, region: string = 'us-east-1'): Promise<VisionAnalysisResult> {
+  private async analyzeWithAWS(
+    imageData: Buffer,
+    accessKey: string,
+    secretKey: string,
+    region: string = 'us-east-1'
+  ): Promise<VisionAnalysisResult> {
     // Note: This would require AWS SDK implementation
     // For now, return a placeholder
     throw new Error('AWS Rekognition integration not yet implemented');
@@ -250,7 +269,7 @@ export class FreeVisionAPIProvider {
    * Get next available provider using round-robin
    */
   private getNextAvailableProvider(): FreeAPIProvider | null {
-    const availableProviders = this.providers.filter(p => p.isAvailable);
+    const availableProviders = this.providers.filter((p) => p.isAvailable);
     if (availableProviders.length === 0) return null;
 
     const provider = availableProviders[this.currentProviderIndex % availableProviders.length];
@@ -261,7 +280,11 @@ export class FreeVisionAPIProvider {
   /**
    * Analyze with specific provider
    */
-  private async analyzeWithProvider(provider: FreeAPIProvider, imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithProvider(
+    provider: FreeAPIProvider,
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     switch (provider.name) {
       case 'Ollama LLaVA':
         return this.analyzeWithOllama(imageData, prompt);
@@ -293,34 +316,42 @@ export class FreeVisionAPIProvider {
   /**
    * Analyze image with Google Gemini 2.5 Flash (free tier)
    */
-  private async analyzeWithGeminiFlash(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithGeminiFlash(
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
     const response = await axios.post(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
       {
-        contents: [{
-          parts: [
-            { text: analysisPrompt },
-            {
-              inline_data: {
-                mime_type: 'image/jpeg',
-                data: base64Image
-              }
-            }
-          ]
-        }]
+        contents: [
+          {
+            parts: [
+              { text: analysisPrompt },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Image,
+                },
+              },
+            ],
+          },
+        ],
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate description';
+    const description =
+      response.data.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate description';
 
     return {
       description,
@@ -330,17 +361,22 @@ export class FreeVisionAPIProvider {
       metadata: {
         model: 'gemini-2.5-flash',
         free: true,
-        tier: 'free'
-      }
+        tier: 'free',
+      },
     };
   }
 
   /**
    * Analyze image with OpenRouter Qwen2.5-VL (free tier)
    */
-  private async analyzeWithOpenRouter(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithOpenRouter(
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
@@ -354,23 +390,24 @@ export class FreeVisionAPIProvider {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
-        max_tokens: 1000
+        max_tokens: 1000,
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.choices?.[0]?.message?.content || 'Unable to generate description';
+    const description =
+      response.data.choices?.[0]?.message?.content || 'Unable to generate description';
 
     return {
       description,
@@ -380,8 +417,8 @@ export class FreeVisionAPIProvider {
       metadata: {
         model: 'qwen-2.5-vl-32b-instruct',
         free: true,
-        tier: 'free'
-      }
+        tier: 'free',
+      },
     };
   }
 
@@ -390,7 +427,9 @@ export class FreeVisionAPIProvider {
    */
   private async analyzeWithGroq(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
     const response = await axios.post(
       'https://api.groq.com/openai/v1/chat/completions',
@@ -404,24 +443,25 @@ export class FreeVisionAPIProvider {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 1000,
-        temperature: 0.1
+        temperature: 0.1,
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.choices?.[0]?.message?.content || 'Unable to generate description';
+    const description =
+      response.data.choices?.[0]?.message?.content || 'Unable to generate description';
 
     return {
       description,
@@ -431,17 +471,22 @@ export class FreeVisionAPIProvider {
       metadata: {
         model: 'llava-v1.5-7b-4096-preview',
         free: true,
-        tier: 'free'
-      }
+        tier: 'free',
+      },
     };
   }
 
   /**
    * Analyze image with Together AI Vision (free tier)
    */
-  private async analyzeWithTogether(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithTogether(
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
     const response = await axios.post(
       'https://api.together.xyz/v1/chat/completions',
@@ -455,24 +500,25 @@ export class FreeVisionAPIProvider {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 1000,
-        temperature: 0.1
+        temperature: 0.1,
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.choices?.[0]?.message?.content || 'Unable to generate description';
+    const description =
+      response.data.choices?.[0]?.message?.content || 'Unable to generate description';
 
     return {
       description,
@@ -482,17 +528,22 @@ export class FreeVisionAPIProvider {
       metadata: {
         model: 'Llama-3.2-11B-Vision-Instruct-Turbo',
         free: true,
-        tier: 'free'
-      }
+        tier: 'free',
+      },
     };
   }
 
   /**
    * Analyze image with Fireworks AI Vision (free tier)
    */
-  private async analyzeWithFireworks(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithFireworks(
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
     const response = await axios.post(
       'https://api.fireworks.ai/inference/v1/chat/completions',
@@ -506,24 +557,25 @@ export class FreeVisionAPIProvider {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 1000,
-        temperature: 0.1
+        temperature: 0.1,
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.choices?.[0]?.message?.content || 'Unable to generate description';
+    const description =
+      response.data.choices?.[0]?.message?.content || 'Unable to generate description';
 
     return {
       description,
@@ -533,17 +585,22 @@ export class FreeVisionAPIProvider {
       metadata: {
         model: 'llava-v15-13b-fireworks',
         free: true,
-        tier: 'free'
-      }
+        tier: 'free',
+      },
     };
   }
 
   /**
    * Analyze image with DeepInfra Vision (free tier)
    */
-  private async analyzeWithDeepInfra(imageData: Buffer, prompt?: string): Promise<VisionAnalysisResult> {
+  private async analyzeWithDeepInfra(
+    imageData: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult> {
     const base64Image = imageData.toString('base64');
-    const analysisPrompt = prompt || 'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
+    const analysisPrompt =
+      prompt ||
+      'Describe what you see in this image in detail. Focus on any text, UI elements, buttons, or interactive components that might be relevant for automation.';
 
     const response = await axios.post(
       'https://api.deepinfra.com/v1/openai/chat/completions',
@@ -557,24 +614,25 @@ export class FreeVisionAPIProvider {
               {
                 type: 'image_url',
                 image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`
-                }
-              }
-            ]
-          }
+                  url: `data:image/jpeg;base64,${base64Image}`,
+                },
+              },
+            ],
+          },
         ],
         max_tokens: 1000,
-        temperature: 0.1
+        temperature: 0.1,
       },
       {
         timeout: 30000,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
 
-    const description = response.data.choices?.[0]?.message?.content || 'Unable to generate description';
+    const description =
+      response.data.choices?.[0]?.message?.content || 'Unable to generate description';
 
     return {
       description,
@@ -584,8 +642,8 @@ export class FreeVisionAPIProvider {
       metadata: {
         model: 'llava-1.5-7b-hf',
         free: true,
-        tier: 'free'
-      }
+        tier: 'free',
+      },
     };
   }
 
@@ -596,7 +654,7 @@ export class FreeVisionAPIProvider {
     // Check Ollama
     try {
       await axios.get('http://localhost:11434/api/tags', { timeout: 5000 });
-      const ollamaProvider = this.providers.find(p => p.name === 'Ollama LLaVA');
+      const ollamaProvider = this.providers.find((p) => p.name === 'Ollama LLaVA');
       if (ollamaProvider) {
         ollamaProvider.isAvailable = true;
       }
@@ -612,11 +670,11 @@ export class FreeVisionAPIProvider {
       'Together AI Vision Free',
       'Fireworks AI Vision Free',
       'DeepInfra Vision Free',
-      'Hugging Face Inference API'
+      'Hugging Face Inference API',
     ];
 
-    alwaysAvailableProviders.forEach(providerName => {
-      const provider = this.providers.find(p => p.name === providerName);
+    alwaysAvailableProviders.forEach((providerName) => {
+      const provider = this.providers.find((p) => p.name === providerName);
       if (provider) {
         provider.isAvailable = true;
       }
@@ -644,22 +702,23 @@ export class FreeVisionAPIProvider {
    * Check if image is supported by provider
    */
   isImageSupported(provider: FreeAPIProvider, imageSize: number, format: string): boolean {
-    return imageSize <= provider.maxImageSize && 
-           provider.supportedFormats.includes(format.toLowerCase());
+    return (
+      imageSize <= provider.maxImageSize && provider.supportedFormats.includes(format.toLowerCase())
+    );
   }
 
   /**
    * Get recommended provider for image
    */
   getRecommendedProvider(imageSize: number, format: string): FreeAPIProvider | null {
-    const suitableProviders = this.providers.filter(p => 
-      p.isAvailable && this.isImageSupported(p, imageSize, format)
+    const suitableProviders = this.providers.filter(
+      (p) => p.isAvailable && this.isImageSupported(p, imageSize, format)
     );
 
     if (suitableProviders.length === 0) return null;
 
     // Prefer local providers for privacy and speed
-    const localProvider = suitableProviders.find(p => p.isLocal);
+    const localProvider = suitableProviders.find((p) => p.isLocal);
     if (localProvider) return localProvider;
 
     // Otherwise return first available

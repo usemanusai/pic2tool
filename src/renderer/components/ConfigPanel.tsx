@@ -39,7 +39,7 @@ const ConfigPanel: React.FC = () => {
     key: '',
     name: '',
     tier: 'free' as 'free' | 'trial' | 'paid',
-    dailyLimit: 100
+    dailyLimit: 100,
   });
   const [settings, setSettings] = useState({
     frameRate: 2,
@@ -48,7 +48,7 @@ const ConfigPanel: React.FC = () => {
     maxFrames: 1000,
     preferFreeProviders: true,
     fallbackToFree: true,
-    maxRetries: 3
+    maxRetries: 3,
   });
   const [activeTab, setActiveTab] = useState<'keys' | 'free' | 'settings' | 'stats'>('keys');
 
@@ -72,7 +72,7 @@ const ConfigPanel: React.FC = () => {
     try {
       const savedSettings = await window.electronAPI.getSettings();
       if (savedSettings.processing) {
-        setSettings(prev => ({ ...prev, ...savedSettings.processing }));
+        setSettings((prev) => ({ ...prev, ...savedSettings.processing }));
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -126,7 +126,7 @@ const ConfigPanel: React.FC = () => {
       await window.electronAPI.addAPIKey(newKey.provider, newKey.key.trim(), {
         name: newKey.name || undefined,
         tier: newKey.tier,
-        dailyLimit: newKey.dailyLimit
+        dailyLimit: newKey.dailyLimit,
       });
 
       setNewKey({
@@ -134,7 +134,7 @@ const ConfigPanel: React.FC = () => {
         key: '',
         name: '',
         tier: 'free',
-        dailyLimit: 100
+        dailyLimit: 100,
       });
 
       // Refresh API key status
@@ -230,7 +230,9 @@ const ConfigPanel: React.FC = () => {
 
           {Object.entries(apiKeyStatus).map(([provider, keys]) => (
             <div key={provider} className="provider-section">
-              <h5>{provider.toUpperCase()} Keys ({keys.length})</h5>
+              <h5>
+                {provider.toUpperCase()} Keys ({keys.length})
+              </h5>
 
               {keys.length === 0 ? (
                 <p className="no-keys">No keys configured for this provider</p>
@@ -267,7 +269,9 @@ const ConfigPanel: React.FC = () => {
             <div className="form-row">
               <select
                 value={newKey.provider}
-                onChange={(e) => setNewKey(prev => ({ ...prev, provider: e.target.value as APIKey['provider'] }))}
+                onChange={(e) =>
+                  setNewKey((prev) => ({ ...prev, provider: e.target.value as APIKey['provider'] }))
+                }
               >
                 <option value="openai">OpenAI GPT-4V</option>
                 <option value="google">Google Vision</option>
@@ -278,7 +282,7 @@ const ConfigPanel: React.FC = () => {
               <input
                 type="text"
                 value={newKey.name}
-                onChange={(e) => setNewKey(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setNewKey((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="Key name (optional)"
               />
             </div>
@@ -286,12 +290,17 @@ const ConfigPanel: React.FC = () => {
               <input
                 type="password"
                 value={newKey.key}
-                onChange={(e) => setNewKey(prev => ({ ...prev, key: e.target.value }))}
+                onChange={(e) => setNewKey((prev) => ({ ...prev, key: e.target.value }))}
                 placeholder="Enter API key"
               />
               <select
                 value={newKey.tier}
-                onChange={(e) => setNewKey(prev => ({ ...prev, tier: e.target.value as 'free' | 'trial' | 'paid' }))}
+                onChange={(e) =>
+                  setNewKey((prev) => ({
+                    ...prev,
+                    tier: e.target.value as 'free' | 'trial' | 'paid',
+                  }))
+                }
               >
                 <option value="free">Free Tier</option>
                 <option value="trial">Trial Account</option>
@@ -302,7 +311,9 @@ const ConfigPanel: React.FC = () => {
               <input
                 type="number"
                 value={newKey.dailyLimit}
-                onChange={(e) => setNewKey(prev => ({ ...prev, dailyLimit: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setNewKey((prev) => ({ ...prev, dailyLimit: parseInt(e.target.value) }))
+                }
                 placeholder="Daily limit"
                 min="1"
                 max="10000"
@@ -333,12 +344,12 @@ const ConfigPanel: React.FC = () => {
                   <span className={`provider-type ${provider.isLocal ? 'local' : 'cloud'}`}>
                     {provider.isLocal ? '💻 Local' : '☁️ Cloud'}
                   </span>
-                  <span className={`availability ${provider.isAvailable ? 'available' : 'unavailable'}`}>
+                  <span
+                    className={`availability ${provider.isAvailable ? 'available' : 'unavailable'}`}
+                  >
                     {provider.isAvailable ? '✅ Available' : '❌ Unavailable'}
                   </span>
-                  {provider.name.includes('2025') && (
-                    <span className="new-badge">🆕 NEW 2025</span>
-                  )}
+                  {provider.name.includes('2025') && <span className="new-badge">🆕 NEW 2025</span>}
                 </div>
                 <div className="provider-details">
                   <span>Max size: {(provider.maxImageSize / 1024 / 1024).toFixed(1)}MB</span>
@@ -354,34 +365,60 @@ const ConfigPanel: React.FC = () => {
             <div className="setup-tier">
               <h6>🥇 Tier 1: Local Unlimited (Best)</h6>
               <ul>
-                <li><strong>Ollama LLaVA:</strong> Install Ollama and run <code>ollama pull llava:latest</code></li>
-                <li><strong>Advanced:</strong> Try <code>ollama pull qwen2-vl:7b</code> for better performance</li>
+                <li>
+                  <strong>Ollama LLaVA:</strong> Install Ollama and run{' '}
+                  <code>ollama pull llava:latest</code>
+                </li>
+                <li>
+                  <strong>Advanced:</strong> Try <code>ollama pull qwen2-vl:7b</code> for better
+                  performance
+                </li>
               </ul>
             </div>
 
             <div className="setup-tier">
               <h6>🥈 Tier 2: New 2025 Free Cloud (No Setup)</h6>
               <ul>
-                <li><strong>Google Gemini 2.5 Flash:</strong> No setup required - 500 requests/day free</li>
-                <li><strong>OpenRouter Qwen2.5-VL:</strong> No setup required - 100 requests/day free</li>
-                <li><strong>Groq LLaVA:</strong> No setup required - 100 requests/day free</li>
-                <li><strong>Together AI Vision:</strong> $5 free credits monthly</li>
-                <li><strong>Fireworks AI Vision:</strong> $1 free credits monthly</li>
-                <li><strong>DeepInfra Vision:</strong> $5 free credits monthly</li>
+                <li>
+                  <strong>Google Gemini 2.5 Flash:</strong> No setup required - 500 requests/day
+                  free
+                </li>
+                <li>
+                  <strong>OpenRouter Qwen2.5-VL:</strong> No setup required - 100 requests/day free
+                </li>
+                <li>
+                  <strong>Groq LLaVA:</strong> No setup required - 100 requests/day free
+                </li>
+                <li>
+                  <strong>Together AI Vision:</strong> $5 free credits monthly
+                </li>
+                <li>
+                  <strong>Fireworks AI Vision:</strong> $1 free credits monthly
+                </li>
+                <li>
+                  <strong>DeepInfra Vision:</strong> $5 free credits monthly
+                </li>
               </ul>
             </div>
 
             <div className="setup-tier">
               <h6>🥉 Tier 3: Traditional Free Tiers</h6>
               <ul>
-                <li><strong>Hugging Face:</strong> No setup required, but has rate limits</li>
-                <li><strong>Azure/AWS/Google:</strong> Add free tier API keys above</li>
+                <li>
+                  <strong>Hugging Face:</strong> No setup required, but has rate limits
+                </li>
+                <li>
+                  <strong>Azure/AWS/Google:</strong> Add free tier API keys above
+                </li>
               </ul>
             </div>
 
             <div className="cost-savings-2025">
               <h6>💰 2025 Cost Savings:</h6>
-              <p>With these new providers, you can now analyze <strong>10,000+ images per month completely free</strong> by combining:</p>
+              <p>
+                With these new providers, you can now analyze{' '}
+                <strong>10,000+ images per month completely free</strong> by combining:
+              </p>
               <ul>
                 <li>Unlimited local analysis (Ollama)</li>
                 <li>500/day from Gemini Flash (15,000/month)</li>
@@ -389,7 +426,9 @@ const ConfigPanel: React.FC = () => {
                 <li>100/day from Groq (3,000/month)</li>
                 <li>$11 in free credits from other providers</li>
               </ul>
-              <p><strong>Total: 21,000+ free requests/month!</strong></p>
+              <p>
+                <strong>Total: 21,000+ free requests/month!</strong>
+              </p>
             </div>
           </div>
         </div>
@@ -409,7 +448,9 @@ const ConfigPanel: React.FC = () => {
                 min="1"
                 max="10"
                 value={settings.frameRate}
-                onChange={(e) => setSettings(prev => ({ ...prev, frameRate: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, frameRate: parseInt(e.target.value) }))
+                }
               />
             </div>
 
@@ -418,7 +459,9 @@ const ConfigPanel: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={settings.skipSimilarFrames}
-                  onChange={(e) => setSettings(prev => ({ ...prev, skipSimilarFrames: e.target.checked }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, skipSimilarFrames: e.target.checked }))
+                  }
                 />
                 Skip similar frames
               </label>
@@ -433,7 +476,12 @@ const ConfigPanel: React.FC = () => {
                   max="0.99"
                   step="0.01"
                   value={settings.similarityThreshold}
-                  onChange={(e) => setSettings(prev => ({ ...prev, similarityThreshold: parseFloat(e.target.value) }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      similarityThreshold: parseFloat(e.target.value),
+                    }))
+                  }
                 />
                 <span>{settings.similarityThreshold}</span>
               </div>
@@ -447,7 +495,9 @@ const ConfigPanel: React.FC = () => {
                 max="5000"
                 step="100"
                 value={settings.maxFrames}
-                onChange={(e) => setSettings(prev => ({ ...prev, maxFrames: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, maxFrames: parseInt(e.target.value) }))
+                }
               />
             </div>
           </div>
@@ -459,7 +509,9 @@ const ConfigPanel: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={settings.preferFreeProviders}
-                  onChange={(e) => setSettings(prev => ({ ...prev, preferFreeProviders: e.target.checked }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, preferFreeProviders: e.target.checked }))
+                  }
                 />
                 Prefer free providers (saves API costs)
               </label>
@@ -470,7 +522,9 @@ const ConfigPanel: React.FC = () => {
                 <input
                   type="checkbox"
                   checked={settings.fallbackToFree}
-                  onChange={(e) => setSettings(prev => ({ ...prev, fallbackToFree: e.target.checked }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, fallbackToFree: e.target.checked }))
+                  }
                 />
                 Fallback to free providers when paid APIs fail
               </label>
@@ -483,7 +537,9 @@ const ConfigPanel: React.FC = () => {
                 min="1"
                 max="5"
                 value={settings.maxRetries}
-                onChange={(e) => setSettings(prev => ({ ...prev, maxRetries: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, maxRetries: parseInt(e.target.value) }))
+                }
               />
             </div>
           </div>
@@ -505,15 +561,19 @@ const ConfigPanel: React.FC = () => {
             <div className="stat-card">
               <h5>Active Keys</h5>
               <span className="stat-value">
-                {Object.values(apiKeyStatus).reduce((sum, keys) =>
-                  sum + keys.filter(k => k.isActive && !k.isRateLimited && !k.isDailyLimitExceeded).length, 0
+                {Object.values(apiKeyStatus).reduce(
+                  (sum, keys) =>
+                    sum +
+                    keys.filter((k) => k.isActive && !k.isRateLimited && !k.isDailyLimitExceeded)
+                      .length,
+                  0
                 )}
               </span>
             </div>
             <div className="stat-card">
               <h5>Free Providers</h5>
               <span className="stat-value">
-                {freeProviders.filter(p => p.isAvailable).length}/{freeProviders.length}
+                {freeProviders.filter((p) => p.isAvailable).length}/{freeProviders.length}
               </span>
             </div>
           </div>
@@ -524,10 +584,9 @@ const ConfigPanel: React.FC = () => {
                 <div className="usage-header">
                   <span className="key-id">{keyId}</span>
                   <span className="success-rate">
-                    {stats.totalCalls > 0 ?
-                      `${Math.round((stats.successfulCalls / stats.totalCalls) * 100)}% success` :
-                      'No calls'
-                    }
+                    {stats.totalCalls > 0
+                      ? `${Math.round((stats.successfulCalls / stats.totalCalls) * 100)}% success`
+                      : 'No calls'}
                   </span>
                 </div>
                 <div className="usage-stats">
@@ -554,71 +613,132 @@ const ConfigPanel: React.FC = () => {
           <div className="info-section">
             <h5>🆓 2025 Completely Free Options:</h5>
             <ul>
-              <li><strong>Ollama LLaVA:</strong> Best option - runs locally, unlimited usage</li>
-              <li><strong>Google Gemini 2.5 Flash:</strong> 500 requests/day, no API key needed</li>
-              <li><strong>OpenRouter Qwen2.5-VL:</strong> 100 requests/day, advanced model</li>
-              <li><strong>Groq LLaVA:</strong> 100 requests/day, ultra-fast inference</li>
-              <li><strong>Together AI:</strong> $5 free credits monthly (~200 requests)</li>
-              <li><strong>DeepInfra:</strong> $5 free credits monthly (~500 requests)</li>
-              <li><strong>Fireworks AI:</strong> $1 free credits monthly (~50 requests)</li>
+              <li>
+                <strong>Ollama LLaVA:</strong> Best option - runs locally, unlimited usage
+              </li>
+              <li>
+                <strong>Google Gemini 2.5 Flash:</strong> 500 requests/day, no API key needed
+              </li>
+              <li>
+                <strong>OpenRouter Qwen2.5-VL:</strong> 100 requests/day, advanced model
+              </li>
+              <li>
+                <strong>Groq LLaVA:</strong> 100 requests/day, ultra-fast inference
+              </li>
+              <li>
+                <strong>Together AI:</strong> $5 free credits monthly (~200 requests)
+              </li>
+              <li>
+                <strong>DeepInfra:</strong> $5 free credits monthly (~500 requests)
+              </li>
+              <li>
+                <strong>Fireworks AI:</strong> $1 free credits monthly (~50 requests)
+              </li>
             </ul>
           </div>
 
           <div className="info-section">
             <h5>🔑 2025 API Key Strategy:</h5>
             <ul>
-              <li><strong>OpenAI:</strong> $5 free credit for new accounts</li>
-              <li><strong>Google Vision:</strong> 1000 free requests/month</li>
-              <li><strong>Azure:</strong> 5000 free requests/month</li>
-              <li><strong>AWS:</strong> 1000 free requests/month</li>
-              <li><strong>Anthropic Claude:</strong> Free tier with vision capabilities</li>
-              <li><strong>Replicate:</strong> Free tier for open-source models</li>
+              <li>
+                <strong>OpenAI:</strong> $5 free credit for new accounts
+              </li>
+              <li>
+                <strong>Google Vision:</strong> 1000 free requests/month
+              </li>
+              <li>
+                <strong>Azure:</strong> 5000 free requests/month
+              </li>
+              <li>
+                <strong>AWS:</strong> 1000 free requests/month
+              </li>
+              <li>
+                <strong>Anthropic Claude:</strong> Free tier with vision capabilities
+              </li>
+              <li>
+                <strong>Replicate:</strong> Free tier for open-source models
+              </li>
             </ul>
           </div>
 
           <div className="info-section">
             <h5>⚡ 2025 Smart Features:</h5>
             <ul>
-              <li><strong>Intelligent Provider Selection:</strong> Chooses best free option</li>
-              <li><strong>Automatic Fallback Chain:</strong> 7+ free providers in sequence</li>
-              <li><strong>Real-time Availability:</strong> Checks provider status</li>
-              <li><strong>Usage Optimization:</strong> Minimizes requests intelligently</li>
-              <li><strong>Quality Adaptation:</strong> Adjusts based on provider capabilities</li>
-              <li><strong>Cost Tracking:</strong> Real-time savings calculation</li>
+              <li>
+                <strong>Intelligent Provider Selection:</strong> Chooses best free option
+              </li>
+              <li>
+                <strong>Automatic Fallback Chain:</strong> 7+ free providers in sequence
+              </li>
+              <li>
+                <strong>Real-time Availability:</strong> Checks provider status
+              </li>
+              <li>
+                <strong>Usage Optimization:</strong> Minimizes requests intelligently
+              </li>
+              <li>
+                <strong>Quality Adaptation:</strong> Adjusts based on provider capabilities
+              </li>
+              <li>
+                <strong>Cost Tracking:</strong> Real-time savings calculation
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="cost-savings">
           <h5>💰 2025 Cost Savings Revolution:</h5>
-          <p>With the new 2025 free providers, you can now analyze <strong>21,000+ images per month completely free</strong>:</p>
+          <p>
+            With the new 2025 free providers, you can now analyze{' '}
+            <strong>21,000+ images per month completely free</strong>:
+          </p>
           <div className="savings-breakdown">
             <div className="savings-tier">
               <h6>🥇 Unlimited Tier (Local)</h6>
               <ul>
-                <li>Ollama LLaVA: <strong>Unlimited</strong> (Best quality, privacy)</li>
+                <li>
+                  Ollama LLaVA: <strong>Unlimited</strong> (Best quality, privacy)
+                </li>
               </ul>
             </div>
             <div className="savings-tier">
               <h6>🥈 High-Volume Tier (Cloud Free)</h6>
               <ul>
-                <li>Google Gemini 2.5 Flash: <strong>15,000/month</strong> (500/day)</li>
-                <li>OpenRouter Qwen2.5-VL: <strong>3,000/month</strong> (100/day)</li>
-                <li>Groq LLaVA: <strong>3,000/month</strong> (100/day)</li>
+                <li>
+                  Google Gemini 2.5 Flash: <strong>15,000/month</strong> (500/day)
+                </li>
+                <li>
+                  OpenRouter Qwen2.5-VL: <strong>3,000/month</strong> (100/day)
+                </li>
+                <li>
+                  Groq LLaVA: <strong>3,000/month</strong> (100/day)
+                </li>
               </ul>
             </div>
             <div className="savings-tier">
               <h6>🥉 Credit-Based Tier</h6>
               <ul>
-                <li>Together AI: <strong>~200/month</strong> ($5 credits)</li>
-                <li>DeepInfra: <strong>~500/month</strong> ($5 credits)</li>
-                <li>Fireworks AI: <strong>~50/month</strong> ($1 credits)</li>
+                <li>
+                  Together AI: <strong>~200/month</strong> ($5 credits)
+                </li>
+                <li>
+                  DeepInfra: <strong>~500/month</strong> ($5 credits)
+                </li>
+                <li>
+                  Fireworks AI: <strong>~50/month</strong> ($1 credits)
+                </li>
               </ul>
             </div>
           </div>
-          <p><strong>Total Monthly Capacity: 21,750+ free requests!</strong></p>
-          <p><strong>Estimated Value: $500-1000+ per month in API costs saved!</strong></p>
-          <p><em>Previous limit was ~7,000/month - this is a 3x improvement!</em></p>
+          <p>
+            <strong>Total Monthly Capacity: 21,750+ free requests!</strong>
+          </p>
+          <p>
+            <strong>Estimated Value: $500-1000+ per month in API costs saved!</strong>
+          </p>
+          <p>
+            <em>Previous limit was ~7,000/month - this is a 3x improvement!</em>
+          </p>
         </div>
       </div>
     </div>

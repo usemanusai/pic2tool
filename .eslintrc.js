@@ -1,11 +1,12 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 2020,
+    ecmaVersion: 2022,
     sourceType: 'module',
     ecmaFeatures: {
       jsx: true,
     },
+    project: './tsconfig.json',
   },
   settings: {
     react: {
@@ -14,7 +15,7 @@ module.exports = {
   },
   extends: [
     'eslint:recommended',
-    '@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
   ],
@@ -34,6 +35,7 @@ module.exports = {
   env: {
     browser: true,
     node: true,
-    es6: true,
+    es2022: true,
   },
+  ignorePatterns: ['dist/', 'node_modules/', '*.js'],
 };

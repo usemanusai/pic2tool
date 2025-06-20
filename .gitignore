@@ -76,3 +76,20 @@ temp/
 # API keys and sensitive data
 config/keys.json
 .secrets
+
+# Binary files and executables
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Setup logs
+setup-log.txt
+setup-report.json
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv

@@ -51,7 +51,7 @@ export class EnhancedVisionProviderManager {
     this.providers = new Map();
     this.usageTracking = new Map();
     this.currentProviderIndex = new Map();
-    
+
     this.preferences = {
       mode: 'free_only',
       maxMonthlyBudget: 0,
@@ -60,7 +60,7 @@ export class EnhancedVisionProviderManager {
       preferredRegions: ['global'],
       blacklistedProviders: [],
       whitelistedProviders: [],
-      enableSpecialized: true
+      enableSpecialized: true,
     };
 
     this.budgetControl = {
@@ -68,7 +68,7 @@ export class EnhancedVisionProviderManager {
       currentSpend: 0,
       remainingBudget: 0,
       costPerRequest: {},
-      projectedMonthlySpend: 0
+      projectedMonthlySpend: 0,
     };
 
     this.initializeProviders();
@@ -79,9 +79,9 @@ export class EnhancedVisionProviderManager {
    * Initialize all providers from configuration
    */
   private initializeProviders(): void {
-    COMPREHENSIVE_VISION_PROVIDERS.forEach(provider => {
+    COMPREHENSIVE_VISION_PROVIDERS.forEach((provider) => {
       this.providers.set(provider.id, provider);
-      
+
       // Initialize usage tracking
       this.usageTracking.set(provider.id, {
         providerId: provider.id,
@@ -91,7 +91,7 @@ export class EnhancedVisionProviderManager {
         totalCost: 0,
         lastUsed: new Date(),
         avgResponseTime: provider.avgResponseTime,
-        qualityRating: provider.qualityScore
+        qualityRating: provider.qualityScore,
       });
     });
   }
@@ -99,16 +99,20 @@ export class EnhancedVisionProviderManager {
   /**
    * Get optimal provider for a request based on preferences and constraints
    */
-  public getOptimalProvider(imageSize: number, format: string, useCase?: string): VisionProvider | null {
+  public getOptimalProvider(
+    imageSize: number,
+    format: string,
+    useCase?: string
+  ): VisionProvider | null {
     const eligibleProviders = this.getEligibleProviders(imageSize, format, useCase);
-    
+
     if (eligibleProviders.length === 0) {
       return null;
     }
 
     // Sort by preference and quality
     const sortedProviders = this.sortProvidersByPreference(eligibleProviders);
-    
+
     // Apply intelligent selection based on mode
     switch (this.preferences.mode) {
       case 'free_only':
@@ -125,31 +129,38 @@ export class EnhancedVisionProviderManager {
   /**
    * Get providers eligible for the request
    */
-  private getEligibleProviders(imageSize: number, format: string, useCase?: string): VisionProvider[] {
-    return Array.from(this.providers.values()).filter(provider => {
+  private getEligibleProviders(
+    imageSize: number,
+    format: string,
+    useCase?: string
+  ): VisionProvider[] {
+    return Array.from(this.providers.values()).filter((provider) => {
       // Basic eligibility checks
       if (!provider.isAvailable) return false;
       if (provider.maxImageSize < imageSize) return false;
       if (!provider.supportedFormats.includes(format.toLowerCase())) return false;
-      
+
       // Preference filters
       if (this.preferences.blacklistedProviders.includes(provider.id)) return false;
-      if (this.preferences.whitelistedProviders.length > 0 && 
-          !this.preferences.whitelistedProviders.includes(provider.id)) return false;
+      if (
+        this.preferences.whitelistedProviders.length > 0 &&
+        !this.preferences.whitelistedProviders.includes(provider.id)
+      )
+        return false;
       if (!this.preferences.preferredRegions.includes(provider.region)) return false;
-      
+
       // Quality threshold
       if (provider.qualityScore < this.preferences.qualityThreshold) return false;
-      
+
       // Speed threshold
       if (provider.avgResponseTime > this.preferences.speedThreshold) return false;
-      
+
       // Budget constraints for paid providers
       if (provider.costPerRequest && provider.costPerRequest > 0) {
         if (this.preferences.mode === 'free_only') return false;
         if (this.budgetControl.remainingBudget < provider.costPerRequest) return false;
       }
-      
+
       // Use case specific filtering
       if (useCase) {
         switch (useCase) {
@@ -165,7 +176,7 @@ export class EnhancedVisionProviderManager {
             return provider.supportsObjectDetection;
         }
       }
-      
+
       return true;
     });
   }
@@ -182,24 +193,26 @@ export class EnhancedVisionProviderManager {
         if (aIsFree && !bIsFree) return -1;
         if (!aIsFree && bIsFree) return 1;
       }
-      
+
       // Priority 2: Quality score
       const qualityDiff = b.qualityScore - a.qualityScore;
       if (Math.abs(qualityDiff) > 0.5) return qualityDiff;
-      
+
       // Priority 3: Speed (lower response time is better)
       const speedDiff = a.avgResponseTime - b.avgResponseTime;
       if (Math.abs(speedDiff) > 500) return speedDiff;
-      
+
       // Priority 4: Success rate from usage tracking
       const aUsage = this.usageTracking.get(a.id);
       const bUsage = this.usageTracking.get(b.id);
       if (aUsage && bUsage) {
-        const aSuccessRate = aUsage.requestCount > 0 ? aUsage.successCount / aUsage.requestCount : 0.5;
-        const bSuccessRate = bUsage.requestCount > 0 ? bUsage.successCount / bUsage.requestCount : 0.5;
+        const aSuccessRate =
+          aUsage.requestCount > 0 ? aUsage.successCount / aUsage.requestCount : 0.5;
+        const bSuccessRate =
+          bUsage.requestCount > 0 ? bUsage.successCount / bUsage.requestCount : 0.5;
         return bSuccessRate - aSuccessRate;
       }
-      
+
       return 0;
     });
   }
@@ -208,7 +221,7 @@ export class EnhancedVisionProviderManager {
    * Select provider for free-only mode
    */
   private selectFreeProvider(providers: VisionProvider[]): VisionProvider | null {
-    const freeProviders = providers.filter(p => !p.costPerRequest || p.costPerRequest === 0);
+    const freeProviders = providers.filter((p) => !p.costPerRequest || p.costPerRequest === 0);
     return freeProviders.length > 0 ? freeProviders[0] : null;
   }
 
@@ -219,9 +232,9 @@ export class EnhancedVisionProviderManager {
     // Try free providers first
     const freeProvider = this.selectFreeProvider(providers);
     if (freeProvider) return freeProvider;
-    
+
     // Fall back to paid if budget allows
-    const paidProviders = providers.filter(p => p.costPerRequest && p.costPerRequest > 0);
+    const paidProviders = providers.filter((p) => p.costPerRequest && p.costPerRequest > 0);
     return paidProviders.length > 0 ? paidProviders[0] : null;
   }
 
@@ -230,9 +243,9 @@ export class EnhancedVisionProviderManager {
    */
   private selectPremiumProvider(providers: VisionProvider[]): VisionProvider | null {
     // Prefer paid providers for quality
-    const paidProviders = providers.filter(p => p.costPerRequest && p.costPerRequest > 0);
+    const paidProviders = providers.filter((p) => p.costPerRequest && p.costPerRequest > 0);
     if (paidProviders.length > 0) return paidProviders[0];
-    
+
     // Fall back to free if no paid available
     return this.selectFreeProvider(providers);
   }
@@ -240,7 +253,12 @@ export class EnhancedVisionProviderManager {
   /**
    * Track usage for a provider
    */
-  public trackUsage(providerId: string, success: boolean, responseTime: number, cost: number = 0): void {
+  public trackUsage(
+    providerId: string,
+    success: boolean,
+    responseTime: number,
+    cost: number = 0
+  ): void {
     const usage = this.usageTracking.get(providerId);
     if (usage) {
       usage.requestCount++;
@@ -249,10 +267,11 @@ export class EnhancedVisionProviderManager {
       usage.totalCost += cost;
       usage.lastUsed = new Date();
       usage.avgResponseTime = (usage.avgResponseTime + responseTime) / 2;
-      
+
       // Update budget tracking
       this.budgetControl.currentSpend += cost;
-      this.budgetControl.remainingBudget = this.budgetControl.monthlyBudget - this.budgetControl.currentSpend;
+      this.budgetControl.remainingBudget =
+        this.budgetControl.monthlyBudget - this.budgetControl.currentSpend;
     }
   }
 
@@ -276,24 +295,77 @@ export class EnhancedVisionProviderManager {
   public updatePreferences(preferences: Partial<ProviderPreferences>): void {
     this.preferences = { ...this.preferences, ...preferences };
     this.budgetControl.monthlyBudget = this.preferences.maxMonthlyBudget;
-    this.budgetControl.remainingBudget = this.budgetControl.monthlyBudget - this.budgetControl.currentSpend;
+    this.budgetControl.remainingBudget =
+      this.budgetControl.monthlyBudget - this.budgetControl.currentSpend;
     this.saveSettings();
   }
 
   /**
    * Get all providers by category
    */
-  public getProvidersByCategory(): Record<string, VisionProvider[]> {
+  public getProvidersByCategory(
+    category?: string
+  ): Record<string, VisionProvider[]> | VisionProvider[] {
     const categories: Record<string, VisionProvider[]> = {};
-    
-    Array.from(this.providers.values()).forEach(provider => {
+
+    Array.from(this.providers.values()).forEach((provider) => {
       if (!categories[provider.category]) {
         categories[provider.category] = [];
       }
       categories[provider.category].push(provider);
     });
-    
+
+    if (category) {
+      return categories[category] || [];
+    }
+
     return categories;
+  }
+
+  /**
+   * Get provider preferences (for UI compatibility)
+   */
+  public getProviderPreferences(): any {
+    return {
+      preferredTier: 'hybrid',
+      budgetLimits: this.budgetControl,
+      performanceWeights: {
+        speed: 0.3,
+        quality: 0.4,
+        cost: 0.2,
+        privacy: 0.1,
+      },
+    };
+  }
+
+  /**
+   * Update provider preferences (for UI compatibility)
+   */
+  public updateProviderPreferences(preferences: any): void {
+    // Update internal preferences based on the input
+    if (preferences.budgetLimits) {
+      this.budgetControl = { ...this.budgetControl, ...preferences.budgetLimits };
+    }
+  }
+
+  /**
+   * Get provider recommendations (for UI compatibility)
+   */
+  public getProviderRecommendations(): any[] {
+    const recommendations = [];
+    const availableProviders = Array.from(this.providers.values()).filter((p) => p.isAvailable);
+
+    for (const provider of availableProviders.slice(0, 5)) {
+      recommendations.push({
+        providerId: provider.id,
+        name: provider.name,
+        reason: `${provider.category} provider with ${provider.qualityScore}/10 quality`,
+        confidence: provider.qualityScore / 10,
+        estimatedCost: provider.costPerRequest || 0,
+      });
+    }
+
+    return recommendations.sort((a, b) => b.confidence - a.confidence);
   }
 
   /**
@@ -301,33 +373,29 @@ export class EnhancedVisionProviderManager {
    */
   public getRecommendations(useCase: string): VisionProvider[] {
     const allProviders = Array.from(this.providers.values());
-    
+
     switch (useCase) {
       case 'cost_optimization':
         return allProviders
-          .filter(p => !p.costPerRequest || p.costPerRequest === 0)
+          .filter((p) => !p.costPerRequest || p.costPerRequest === 0)
           .sort((a, b) => b.qualityScore - a.qualityScore);
-      
+
       case 'quality_focused':
-        return allProviders
-          .sort((a, b) => b.qualityScore - a.qualityScore)
-          .slice(0, 5);
-      
+        return allProviders.sort((a, b) => b.qualityScore - a.qualityScore).slice(0, 5);
+
       case 'speed_focused':
-        return allProviders
-          .sort((a, b) => a.avgResponseTime - b.avgResponseTime)
-          .slice(0, 5);
-      
+        return allProviders.sort((a, b) => a.avgResponseTime - b.avgResponseTime).slice(0, 5);
+
       case 'document_analysis':
         return allProviders
-          .filter(p => p.supportsDocumentAnalysis)
+          .filter((p) => p.supportsDocumentAnalysis)
           .sort((a, b) => b.qualityScore - a.qualityScore);
-      
+
       case 'ui_analysis':
         return allProviders
-          .filter(p => p.supportsUIAnalysis)
+          .filter((p) => p.supportsUIAnalysis)
           .sort((a, b) => b.qualityScore - a.qualityScore);
-      
+
       default:
         return allProviders.sort((a, b) => b.qualityScore - a.qualityScore);
     }
@@ -375,7 +443,7 @@ export class EnhancedVisionProviderManager {
       const settings = {
         preferences: this.preferences,
         budgetControl: this.budgetControl,
-        usageTracking: Object.fromEntries(this.usageTracking)
+        usageTracking: Object.fromEntries(this.usageTracking),
       };
       await this.settingsManager.set('enhancedVisionProviderSettings', settings);
     } catch (error) {

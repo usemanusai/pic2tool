@@ -12,19 +12,19 @@ export interface VisionProvider {
   region: 'global' | 'us' | 'eu' | 'asia' | 'china';
   isLocal: boolean;
   isAvailable: boolean;
-  
+
   // Capacity and limits
   dailyLimit?: number;
   monthlyLimit?: number;
   freeCredits?: number;
   creditValue?: number; // USD value of free credits
-  
+
   // Technical specs
   maxImageSize: number;
   supportedFormats: string[];
   maxConcurrentRequests: number;
   avgResponseTime: number; // milliseconds
-  
+
   // Quality and features
   qualityScore: number; // 1-10
   supportsOCR: boolean;
@@ -32,22 +32,44 @@ export interface VisionProvider {
   supportsSceneAnalysis: boolean;
   supportsUIAnalysis: boolean;
   supportsDocumentAnalysis: boolean;
-  
+
   // Pricing (for premium tiers)
   costPerRequest?: number; // USD
   costPer1000Requests?: number; // USD
-  
+
   // Configuration
   requiresApiKey: boolean;
   requiresCreditCard: boolean;
   setupComplexity: 'none' | 'easy' | 'medium' | 'complex';
-  
+
+  // Dynamic Model Support (NEW)
+  supportedModels?: string[]; // Available models for this provider
+  defaultModel?: string; // Default model to use
+  customModelSupport?: boolean; // Whether provider supports custom model names
+  modelValidationEndpoint?: string; // Endpoint to validate model availability
+
   // Metadata
   description: string;
   strengths: string[];
   limitations: string[];
   bestUseCases: string[];
   addedDate: string;
+}
+
+// New interface for model configuration
+export interface ModelConfiguration {
+  providerId: string;
+  modelName: string;
+  displayName: string;
+  isCustom: boolean;
+  isValidated: boolean;
+  lastValidated?: Date;
+  validationError?: string;
+  performance?: {
+    qualityScore: number;
+    avgResponseTime: number;
+    costPerRequest?: number;
+  };
 }
 
 export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
@@ -78,7 +100,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Unlimited usage', 'Complete privacy', 'No internet required', 'High quality'],
     limitations: ['Requires local installation', 'Uses system resources'],
     bestUseCases: ['Privacy-sensitive analysis', 'High-volume processing', 'Offline usage'],
-    addedDate: '2024-01-01'
+    addedDate: '2024-01-01',
   },
 
   // ===== TIER 2: FREE CLOUD (HIGH LIMITS) =====
@@ -87,7 +109,8 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     name: 'Google Gemini 2.5 Flash Free',
     category: 'completely_free',
     tier: 'free_cloud',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    endpoint:
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
     region: 'global',
     isLocal: false,
     isAvailable: true,
@@ -110,7 +133,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Excellent quality', 'High daily limits', 'Fast processing', 'No setup required'],
     limitations: ['Daily rate limits', 'Requires internet'],
     bestUseCases: ['High-quality analysis', 'Complex scene understanding', 'Document processing'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   {
@@ -137,11 +160,35 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     requiresApiKey: false,
     requiresCreditCard: false,
     setupComplexity: 'none',
-    description: 'Advanced Qwen2.5-VL model with excellent reasoning',
-    strengths: ['Advanced reasoning', 'Excellent for UI analysis', 'High accuracy'],
-    limitations: ['Lower daily limits', 'Slower than Groq'],
-    bestUseCases: ['UI analysis', 'Complex reasoning tasks', 'Document understanding'],
-    addedDate: '2025-01-01'
+    // Dynamic Model Support
+    supportedModels: [
+      'qwen/qwen-2.5-vl-32b-instruct:free',
+      'qwen/qwen-2.5-vl-7b-instruct:free',
+      'anthropic/claude-3.5-sonnet',
+      'anthropic/claude-3-haiku',
+      'google/gemini-2.0-flash-exp',
+      'meta-llama/llama-3.2-90b-vision-instruct',
+      'microsoft/phi-3.5-vision-instruct',
+    ],
+    defaultModel: 'qwen/qwen-2.5-vl-32b-instruct:free',
+    customModelSupport: true,
+    modelValidationEndpoint: 'https://openrouter.ai/api/v1/models',
+    description: 'Advanced Qwen2.5-VL model with excellent reasoning and custom model support',
+    strengths: [
+      'Advanced reasoning',
+      'Excellent for UI analysis',
+      'High accuracy',
+      'Custom model support',
+      'Multiple model options',
+    ],
+    limitations: ['Lower daily limits', 'Slower than Groq', 'Some models require API key'],
+    bestUseCases: [
+      'UI analysis',
+      'Complex reasoning tasks',
+      'Document understanding',
+      'Model experimentation',
+    ],
+    addedDate: '2025-01-01',
   },
 
   {
@@ -172,7 +219,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Ultra-fast inference', 'Low latency', 'Good quality'],
     limitations: ['Smaller image size limit', 'Limited document analysis'],
     bestUseCases: ['Real-time analysis', 'Speed-critical applications', 'Interactive demos'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   // ===== TIER 3: FREE CREDITS (MONTHLY ALLOWANCE) =====
@@ -205,7 +252,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Latest Meta model', 'Good monthly allowance', 'High quality'],
     limitations: ['Monthly credit limit', 'Requires account'],
     bestUseCases: ['High-quality analysis', 'Meta model preference', 'Monthly usage'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   {
@@ -237,7 +284,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Cost-effective', 'Multiple models', 'Good value'],
     limitations: ['Lower quality than premium', 'Credit-based'],
     bestUseCases: ['Cost-conscious analysis', 'Bulk processing', 'Testing'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   {
@@ -269,7 +316,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Enterprise reliability', 'Fast inference', 'Good quality'],
     limitations: ['Limited free credits', 'Lower monthly allowance'],
     bestUseCases: ['Enterprise testing', 'Reliable processing', 'Quality analysis'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   // ===== TIER 4: FREEMIUM (FREE + PAID OPTIONS) =====
@@ -300,7 +347,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Always available', 'No setup required', 'Reliable fallback'],
     limitations: ['Basic captioning only', 'Rate limited', 'Lower quality'],
     bestUseCases: ['Basic image description', 'Fallback option', 'Simple analysis'],
-    addedDate: '2024-01-01'
+    addedDate: '2024-01-01',
   },
 
   {
@@ -334,7 +381,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Multiple model options', 'Open-source models', 'Flexible'],
     limitations: ['Very limited free tier', 'Requires credit card', 'Slower'],
     bestUseCases: ['Model experimentation', 'Specific model requirements', 'Research'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   // ===== TIER 5: PREMIUM OPTIONAL (HIGH QUALITY PAID) =====
@@ -362,11 +409,27 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     requiresApiKey: true,
     requiresCreditCard: true,
     setupComplexity: 'easy',
-    description: 'Premium OpenAI vision model with excellent quality',
-    strengths: ['Excellent quality', 'Fast processing', 'Comprehensive analysis', 'Reliable'],
+    // Dynamic Model Support
+    supportedModels: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4-vision-preview'],
+    defaultModel: 'gpt-4o',
+    customModelSupport: true,
+    modelValidationEndpoint: 'https://api.openai.com/v1/models',
+    description: 'Premium OpenAI vision model with excellent quality and custom model support',
+    strengths: [
+      'Excellent quality',
+      'Fast processing',
+      'Comprehensive analysis',
+      'Reliable',
+      'Multiple model options',
+    ],
     limitations: ['Paid only', 'Requires API key', 'Higher cost'],
-    bestUseCases: ['Professional analysis', 'High-quality requirements', 'Production use'],
-    addedDate: '2025-01-01'
+    bestUseCases: [
+      'Professional analysis',
+      'High-quality requirements',
+      'Production use',
+      'Model experimentation',
+    ],
+    addedDate: '2025-01-01',
   },
 
   {
@@ -394,10 +457,15 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     requiresCreditCard: true,
     setupComplexity: 'easy',
     description: 'Premium Anthropic vision model with exceptional reasoning',
-    strengths: ['Exceptional reasoning', 'Large image support', 'Detailed analysis', 'Safety-focused'],
+    strengths: [
+      'Exceptional reasoning',
+      'Large image support',
+      'Detailed analysis',
+      'Safety-focused',
+    ],
     limitations: ['Paid only', 'Higher cost', 'Slower than GPT-4o'],
     bestUseCases: ['Complex reasoning', 'Large documents', 'Safety-critical analysis', 'Research'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   {
@@ -405,7 +473,8 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     name: 'Google Gemini 2.5 Pro Vision',
     category: 'premium_optional',
     tier: 'premium',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+    endpoint:
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
     region: 'global',
     isLocal: false,
     isAvailable: true,
@@ -428,7 +497,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Excellent quality', 'Fast processing', 'Good value', 'Multimodal'],
     limitations: ['Paid only', 'Requires API key'],
     bestUseCases: ['Production applications', 'High-volume processing', 'Cost-effective premium'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   // ===== TIER 6: SPECIALIZED PROVIDERS =====
@@ -437,7 +506,8 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     name: 'Azure Document Intelligence',
     category: 'specialized',
     tier: 'freemium',
-    endpoint: 'https://api.cognitive.microsoft.com/formrecognizer/documentModels/prebuilt-layout:analyze',
+    endpoint:
+      'https://api.cognitive.microsoft.com/formrecognizer/documentModels/prebuilt-layout:analyze',
     region: 'global',
     isLocal: false,
     isAvailable: true,
@@ -461,7 +531,7 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Excellent OCR', 'Document structure analysis', 'PDF support', 'Free tier'],
     limitations: ['Document-focused only', 'Slower processing', 'Complex setup'],
     bestUseCases: ['Document analysis', 'OCR extraction', 'Form processing', 'PDF analysis'],
-    addedDate: '2025-01-01'
+    addedDate: '2025-01-01',
   },
 
   {
@@ -493,8 +563,8 @@ export const COMPREHENSIVE_VISION_PROVIDERS: VisionProvider[] = [
     strengths: ['Excellent text extraction', 'Table detection', 'Form analysis', 'AWS integration'],
     limitations: ['Text-focused only', 'Complex AWS setup', 'Higher cost'],
     bestUseCases: ['Text extraction', 'Table analysis', 'Form processing', 'AWS environments'],
-    addedDate: '2025-01-01'
-  }
+    addedDate: '2025-01-01',
+  },
 ];
 
 export const PROVIDER_CATEGORIES = {
@@ -502,7 +572,7 @@ export const PROVIDER_CATEGORIES = {
   free_trial: 'Free Trial/Credits',
   freemium: 'Freemium',
   premium_optional: 'Premium Optional',
-  specialized: 'Specialized'
+  specialized: 'Specialized',
 } as const;
 
 export const PROVIDER_TIERS = {
@@ -510,7 +580,7 @@ export const PROVIDER_TIERS = {
   free_cloud: 'Free Cloud',
   free_credits: 'Free Credits',
   freemium: 'Freemium',
-  premium: 'Premium'
+  premium: 'Premium',
 } as const;
 
 export const PROVIDER_REGIONS = {
@@ -518,5 +588,5 @@ export const PROVIDER_REGIONS = {
   us: 'United States',
   eu: 'Europe',
   asia: 'Asia',
-  china: 'China'
+  china: 'China',
 } as const;

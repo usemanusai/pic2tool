@@ -5,10 +5,7 @@ interface ProcessingPanelProps {
   onProcessVideo: (videoPath: string, projectPath: string) => void;
 }
 
-const ProcessingPanel: React.FC<ProcessingPanelProps> = ({
-  isProcessing,
-  onProcessVideo
-}) => {
+const ProcessingPanel: React.FC<ProcessingPanelProps> = ({ isProcessing, onProcessVideo }) => {
   const [videoPath, setVideoPath] = useState<string>('');
   const [projectPath, setProjectPath] = useState<string>('');
 
@@ -19,9 +16,9 @@ const ProcessingPanel: React.FC<ProcessingPanelProps> = ({
           title: 'Select Video File',
           filters: [
             { name: 'Video Files', extensions: ['mp4', 'webm', 'avi', 'mov', 'mkv'] },
-            { name: 'All Files', extensions: ['*'] }
+            { name: 'All Files', extensions: ['*'] },
           ],
-          properties: ['openFile']
+          properties: ['openFile'],
         });
 
         if (!result.canceled && result.filePaths.length > 0) {
@@ -30,7 +27,7 @@ const ProcessingPanel: React.FC<ProcessingPanelProps> = ({
       } else {
         const result = await window.electronAPI.showOpenDialog({
           title: 'Select Project Folder',
-          properties: ['openDirectory', 'createDirectory']
+          properties: ['openDirectory', 'createDirectory'],
         });
 
         if (!result.canceled && result.filePaths.length > 0) {
@@ -56,7 +53,7 @@ const ProcessingPanel: React.FC<ProcessingPanelProps> = ({
   return (
     <div className="processing-panel">
       <h3>Video Processing</h3>
-      
+
       <div className="form-group">
         <label>Video File:</label>
         <div className="file-input-group">

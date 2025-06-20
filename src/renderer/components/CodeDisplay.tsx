@@ -5,10 +5,7 @@ interface CodeDisplayProps {
   onClearResults: () => void;
 }
 
-const CodeDisplay: React.FC<CodeDisplayProps> = ({
-  generatedCode,
-  onClearResults
-}) => {
+const CodeDisplay: React.FC<CodeDisplayProps> = ({ generatedCode, onClearResults }) => {
   const [selectedFile, setSelectedFile] = useState<number>(0);
 
   const handleCopyFile = async () => {
@@ -27,9 +24,9 @@ const CodeDisplay: React.FC<CodeDisplayProps> = ({
     if (!generatedCode) return;
 
     try {
-      const allContent = generatedCode.files.map((file: any) =>
-        `// ${file.path}\n${file.content}\n\n`
-      ).join('');
+      const allContent = generatedCode.files
+        .map((file: any) => `// ${file.path}\n${file.content}\n\n`)
+        .join('');
 
       await navigator.clipboard.writeText(allContent);
       alert('All files copied to clipboard!');
@@ -46,7 +43,7 @@ const CodeDisplay: React.FC<CodeDisplayProps> = ({
       const result = await window.electronAPI.showSaveDialog({
         title: 'Export Generated Code',
         defaultPath: `generated-${Date.now()}`,
-        properties: ['createDirectory']
+        properties: ['createDirectory'],
       });
 
       if (!result.canceled && result.filePath) {
@@ -141,7 +138,7 @@ const CodeDisplay: React.FC<CodeDisplayProps> = ({
         <div className="instructions-content">
           <pre>{instructions}</pre>
         </div>
-        
+
         {dependencies && dependencies.length > 0 && (
           <div className="dependencies">
             <h5>Dependencies:</h5>

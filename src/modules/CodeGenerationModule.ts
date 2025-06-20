@@ -23,13 +23,15 @@ export class CodeGenerationModule {
 
   public async generateCode(sequence: ActionSequence, projectPath: string): Promise<GeneratedCode> {
     try {
-      log.info(`Generating code for ${sequence.metadata.complexity} workflow with ${sequence.steps.length} steps`);
+      log.info(
+        `Generating code for ${sequence.metadata.complexity} workflow with ${sequence.steps.length} steps`
+      );
 
       // Determine output type based on complexity
       const outputType = this.determineOutputType(sequence);
-      
+
       let generatedCode: GeneratedCode;
-      
+
       if (outputType === 'script') {
         generatedCode = await this.generateScript(sequence, projectPath);
       } else {
@@ -41,7 +43,6 @@ export class CodeGenerationModule {
 
       log.info(`Generated ${generatedCode.type} with ${generatedCode.files.length} files`);
       return generatedCode;
-
     } catch (error) {
       log.error('Error generating code:', error);
       throw error;
@@ -51,7 +52,7 @@ export class CodeGenerationModule {
   private determineOutputType(sequence: ActionSequence): 'script' | 'application' {
     const { complexity, totalDuration } = sequence.metadata;
     const stepCount = sequence.steps.length;
-    
+
     // Simple heuristics for determining output type
     if (complexity === 'simple' || (stepCount <= 10 && totalDuration <= 60)) {
       return 'script';
@@ -60,7 +61,10 @@ export class CodeGenerationModule {
     }
   }
 
-  private async generateScript(sequence: ActionSequence, projectPath: string): Promise<GeneratedCode> {
+  private async generateScript(
+    sequence: ActionSequence,
+    projectPath: string
+  ): Promise<GeneratedCode> {
     const scriptContent = this.generatePythonScript(sequence);
     const requirementsContent = this.generateRequirements(['pyautogui', 'time', 'logging']);
     const readmeContent = this.generateScriptReadme(sequence);
@@ -71,74 +75,79 @@ export class CodeGenerationModule {
         {
           path: 'automation_script.py',
           content: scriptContent,
-          description: 'Main automation script'
+          description: 'Main automation script',
         },
         {
           path: 'requirements.txt',
           content: requirementsContent,
-          description: 'Python dependencies'
+          description: 'Python dependencies',
         },
         {
           path: 'README.md',
           content: readmeContent,
-          description: 'Setup and usage instructions'
-        }
+          description: 'Setup and usage instructions',
+        },
       ],
-      instructions: 'Install dependencies with: pip install -r requirements.txt\nRun with: python automation_script.py',
-      dependencies: ['pyautogui', 'time', 'logging']
+      instructions:
+        'Install dependencies with: pip install -r requirements.txt\nRun with: python automation_script.py',
+      dependencies: ['pyautogui', 'time', 'logging'],
     };
   }
 
-  private async generateApplication(sequence: ActionSequence, projectPath: string): Promise<GeneratedCode> {
+  private async generateApplication(
+    sequence: ActionSequence,
+    projectPath: string
+  ): Promise<GeneratedCode> {
     const files: GeneratedFile[] = [];
 
     // Generate main application file
     files.push({
       path: 'src/main.py',
       content: this.generateApplicationMain(sequence),
-      description: 'Main application entry point'
+      description: 'Main application entry point',
     });
 
     // Generate UI file
     files.push({
       path: 'src/ui.py',
       content: this.generateApplicationUI(sequence),
-      description: 'User interface module'
+      description: 'User interface module',
     });
 
     // Generate automation module
     files.push({
       path: 'src/automation.py',
       content: this.generateAutomationModule(sequence),
-      description: 'Automation logic module'
+      description: 'Automation logic module',
     });
 
     // Generate configuration
     files.push({
       path: 'config.json',
       content: this.generateApplicationConfig(sequence),
-      description: 'Application configuration'
+      description: 'Application configuration',
     });
 
     // Generate requirements
     files.push({
       path: 'requirements.txt',
       content: this.generateRequirements(['pyautogui', 'tkinter', 'json', 'logging', 'threading']),
-      description: 'Python dependencies'
+      description: 'Python dependencies',
     });
 
     // Generate README
     files.push({
       path: 'README.md',
       content: this.generateApplicationReadme(sequence),
-      description: 'Setup and usage instructions'
+      description: 'Setup and usage instructions',
     });
 
     return {
       type: 'application',
       files,
-      instructions: 'Install dependencies with: pip install -r requirements.txt\nRun with: python src/main.py',
-      dependencies: ['pyautogui', 'tkinter', 'json', 'logging', 'threading']
+      instructions:
+        'Install dependencies with: pip install -r requirements.txt\nRun with: python src/main.py',
+      dependencies: ['pyautogui', 'tkinter', 'json', 'logging', 'threading'],
     };
   }
 
@@ -155,11 +164,11 @@ export class CodeGenerationModule {
       '# Configure pyautogui',
       'pyautogui.FAILSAFE = True',
       'pyautogui.PAUSE = 0.5',
-      ''
+      '',
     ].join('\n');
 
     const mainFunction = this.generateMainFunction(sequence);
-    
+
     const script = [
       imports,
       mainFunction,
@@ -170,7 +179,7 @@ export class CodeGenerationModule {
       '        logger.info("Automation completed successfully")',
       '    except Exception as e:',
       '        logger.error(f"Automation failed: {e}")',
-      '        raise'
+      '        raise',
     ].join('\n');
 
     return script;
@@ -178,7 +187,7 @@ export class CodeGenerationModule {
 
   private generateMainFunction(sequence: ActionSequence): string {
     const steps = sequence.steps.map((step, index) => this.generateStepCode(step, index));
-    
+
     return [
       'def main():',
       '    """',
@@ -191,22 +200,22 @@ export class CodeGenerationModule {
       '    # Wait for user to position windows',
       '    time.sleep(3)',
       '',
-      ...steps.map(step => `    ${step}`),
+      ...steps.map((step) => `    ${step}`),
       '',
-      '    logger.info("Workflow completed")'
+      '    logger.info("Workflow completed")',
     ].join('\n');
   }
 
   private generateStepCode(step: ActionStep, index: number): string {
     const comment = `# Step ${index + 1}: ${step.description}`;
-    
+
     switch (step.type) {
       case 'click':
         if (step.target) {
           return [
             comment,
             `pyautogui.click(${step.target.coordinates.x}, ${step.target.coordinates.y})`,
-            `logger.info("Clicked at (${step.target.coordinates.x}, ${step.target.coordinates.y})")`
+            `logger.info("Clicked at (${step.target.coordinates.x}, ${step.target.coordinates.y})")`,
           ].join('\n    ');
         }
         return comment + '\n    # Click coordinates not available';
@@ -215,7 +224,7 @@ export class CodeGenerationModule {
         return [
           comment,
           `pyautogui.write("${step.value || ''}")`,
-          `logger.info("Typed: ${step.value || ''}")`
+          `logger.info("Typed: ${step.value || ''}")`,
         ].join('\n    ');
 
       case 'scroll':
@@ -223,21 +232,21 @@ export class CodeGenerationModule {
         return [
           comment,
           `pyautogui.scroll(${scrollAmount})`,
-          `logger.info("Scrolled ${step.value}")`
+          `logger.info("Scrolled ${step.value}")`,
         ].join('\n    ');
 
       case 'wait':
         return [
           comment,
           `time.sleep(${step.duration || 1})`,
-          `logger.info("Waited ${step.duration || 1} seconds")`
+          `logger.info("Waited ${step.duration || 1} seconds")`,
         ].join('\n    ');
 
       case 'key_press':
         return [
           comment,
           `pyautogui.press("${step.value || 'space'}")`,
-          `logger.info("Pressed key: ${step.value || 'space'}")`
+          `logger.info("Pressed key: ${step.value || 'space'}")`,
         ].join('\n    ');
 
       default:
@@ -263,7 +272,7 @@ export class CodeGenerationModule {
       '    root.mainloop()',
       '',
       'if __name__ == "__main__":',
-      '    main()'
+      '    main()',
     ].join('\n');
   }
 
@@ -342,14 +351,14 @@ export class CodeGenerationModule {
       '    ',
       '    def stop_automation(self):',
       '        self.automation_engine.stop()',
-      '        self._automation_completed()'
+      '        self._automation_completed()',
     ].join('\n');
   }
 
   private generateAutomationModule(sequence: ActionSequence): string {
-    const stepMethods = sequence.steps.map((step, index) => 
-      this.generateStepMethod(step, index)
-    ).join('\n\n    ');
+    const stepMethods = sequence.steps
+      .map((step, index) => this.generateStepMethod(step, index))
+      .join('\n\n    ');
 
     return [
       'import pyautogui',
@@ -393,23 +402,23 @@ export class CodeGenerationModule {
       '        self.running = False',
       '        self.logger.info("Automation stopped by user")',
       '    ',
-      `    ${stepMethods}`
+      `    ${stepMethods}`,
     ].join('\n');
   }
 
   private generateStepMethod(step: ActionStep, index: number): string {
     const methodName = `step_${index + 1}`;
     const docstring = `"""${step.description}"""`;
-    
+
     let methodBody = '';
-    
+
     switch (step.type) {
       case 'click':
         if (step.target) {
           methodBody = [
             `        if not self.running: return`,
             `        pyautogui.click(${step.target.coordinates.x}, ${step.target.coordinates.y})`,
-            `        self.logger.info("Clicked at (${step.target.coordinates.x}, ${step.target.coordinates.y})")`
+            `        self.logger.info("Clicked at (${step.target.coordinates.x}, ${step.target.coordinates.y})")`,
           ].join('\n');
         }
         break;
@@ -417,25 +426,23 @@ export class CodeGenerationModule {
         methodBody = [
           `        if not self.running: return`,
           `        pyautogui.write("${step.value || ''}")`,
-          `        self.logger.info("Typed: ${step.value || ''}")`
+          `        self.logger.info("Typed: ${step.value || ''}")`,
         ].join('\n');
         break;
       case 'wait':
         methodBody = [
           `        if not self.running: return`,
           `        time.sleep(${step.duration || 1})`,
-          `        self.logger.info("Waited ${step.duration || 1} seconds")`
+          `        self.logger.info("Waited ${step.duration || 1} seconds")`,
         ].join('\n');
         break;
       default:
         methodBody = `        self.logger.info("${step.description}")`;
     }
 
-    return [
-      `def ${methodName}(self):`,
-      `    ${docstring}`,
-      methodBody || '        pass'
-    ].join('\n');
+    return [`def ${methodName}(self):`, `    ${docstring}`, methodBody || '        pass'].join(
+      '\n'
+    );
   }
 
   private generateApplicationConfig(sequence: ActionSequence): string {
@@ -444,13 +451,13 @@ export class CodeGenerationModule {
         name: sequence.metadata.applicationContext || 'Automated Workflow',
         complexity: sequence.metadata.complexity,
         stepCount: sequence.steps.length,
-        duration: sequence.metadata.totalDuration
+        duration: sequence.metadata.totalDuration,
       },
       settings: {
         pauseBetweenSteps: 0.5,
         failsafeEnabled: true,
-        logLevel: 'INFO'
-      }
+        logLevel: 'INFO',
+      },
     };
 
     return JSON.stringify(config, null, 2);
@@ -490,7 +497,7 @@ export class CodeGenerationModule {
       '',
       '## Generated Steps',
       '',
-      ...sequence.steps.map((step, index) => `${index + 1}. ${step.description}`)
+      ...sequence.steps.map((step, index) => `${index + 1}. ${step.description}`),
     ].join('\n');
   }
 
@@ -529,13 +536,16 @@ export class CodeGenerationModule {
       '- `src/main.py` - Application entry point',
       '- `src/ui.py` - User interface',
       '- `src/automation.py` - Automation logic',
-      '- `config.json` - Configuration settings'
+      '- `config.json` - Configuration settings',
     ].join('\n');
   }
 
-  private async saveGeneratedFiles(generatedCode: GeneratedCode, projectPath: string): Promise<void> {
+  private async saveGeneratedFiles(
+    generatedCode: GeneratedCode,
+    projectPath: string
+  ): Promise<void> {
     const outputDir = path.join(projectPath, 'output');
-    
+
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
@@ -543,11 +553,11 @@ export class CodeGenerationModule {
     for (const file of generatedCode.files) {
       const filePath = path.join(outputDir, file.path);
       const fileDir = path.dirname(filePath);
-      
+
       if (!fs.existsSync(fileDir)) {
         fs.mkdirSync(fileDir, { recursive: true });
       }
-      
+
       fs.writeFileSync(filePath, file.content);
       log.info(`Saved generated file: ${filePath}`);
     }

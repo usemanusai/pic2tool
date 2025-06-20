@@ -94,49 +94,52 @@ class AutomatedDevelopmentRecorder {
     ipcMain.handle('process-video', async (event, videoPath, projectPath) => {
       try {
         log.info('Processing video:', videoPath);
-        
+
         // Extract frames
-        this.sendToRenderer('processing-progress', { 
-          percent: 10, 
-          status: 'Extracting frames from video...' 
+        this.sendToRenderer('processing-progress', {
+          percent: 10,
+          status: 'Extracting frames from video...',
         });
-        
+
         const frames = await this.videoProcessingModule.extractFrames(videoPath, projectPath);
-        
-        this.sendToRenderer('processing-progress', { 
-          percent: 30, 
-          status: 'Analyzing frames with AI vision...' 
+
+        this.sendToRenderer('processing-progress', {
+          percent: 30,
+          status: 'Analyzing frames with AI vision...',
         });
-        
+
         // Analyze frames with AI
         const analysisResults = await this.visionAnalysisModule.analyzeFrames(frames);
-        
-        this.sendToRenderer('processing-progress', { 
-          percent: 60, 
-          status: 'Building action sequence...' 
+
+        this.sendToRenderer('processing-progress', {
+          percent: 60,
+          status: 'Building action sequence...',
         });
-        
+
         // Generate action sequence
         const actionSequence = await this.actionSequenceModule.generateSequence(analysisResults);
-        
-        this.sendToRenderer('processing-progress', { 
-          percent: 80, 
-          status: 'Generating code...' 
+
+        this.sendToRenderer('processing-progress', {
+          percent: 80,
+          status: 'Generating code...',
         });
-        
+
         // Generate code
-        const generatedCode = await this.codeGenerationModule.generateCode(actionSequence, projectPath);
-        
-        this.sendToRenderer('processing-progress', { 
-          percent: 100, 
-          status: 'Complete!' 
+        const generatedCode = await this.codeGenerationModule.generateCode(
+          actionSequence,
+          projectPath
+        );
+
+        this.sendToRenderer('processing-progress', {
+          percent: 100,
+          status: 'Complete!',
         });
-        
-        this.sendToRenderer('generation-complete', { 
-          code: generatedCode, 
-          projectPath 
+
+        this.sendToRenderer('generation-complete', {
+          code: generatedCode,
+          projectPath,
         });
-        
+
         return generatedCode;
       } catch (error) {
         log.error('Error processing video:', error);
@@ -242,7 +245,7 @@ class AutomatedDevelopmentRecorder {
     ipcMain.handle('get-sources', async () => {
       try {
         const sources = await desktopCapturer.getSources({
-          types: ['window', 'screen']
+          types: ['window', 'screen'],
         });
         return sources;
       } catch (error) {
@@ -291,6 +294,133 @@ class AutomatedDevelopmentRecorder {
       } catch (error) {
         log.error('Error showing item in folder:', error);
         throw error;
+      }
+    });
+
+    // Enhanced Provider Management Handlers
+    ipcMain.handle('get-providers-by-category', async (event, category) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.enhancedProviderManager?.getProvidersByCategory(category) || {};
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-providers-by-category');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-provider-preferences', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.enhancedProviderManager?.getProviderPreferences() || {};
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-provider-preferences');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('update-provider-preferences', async (event, preferences) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        visionModule.enhancedProviderManager?.updateProviderPreferences(preferences);
+        return true;
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'update-provider-preferences');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-provider-statistics', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.enhancedProviderManager?.getProviderStatistics() || [];
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-provider-statistics');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-budget-status', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.enhancedProviderManager?.getBudgetStatus() || {};
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-budget-status');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('get-provider-recommendations', async (event) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.enhancedProviderManager?.getProviderRecommendations() || [];
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-provider-recommendations');
+        throw appError;
+      }
+    });
+
+    // Model Management Handlers
+    ipcMain.handle('validate-model', async (event, providerId, modelName, apiKey) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return await visionModule.validateModel(providerId, modelName, apiKey);
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'validate-model');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('discover-models', async (event, providerId, apiKey) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return await visionModule.discoverModels(providerId, apiKey);
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'discover-models');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle(
+      'add-custom-model',
+      async (event, providerId, modelName, displayName, apiKey) => {
+        try {
+          const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+          const visionModule = new VisionAnalysisModule();
+          return await visionModule.addCustomModel(providerId, modelName, displayName, apiKey);
+        } catch (error) {
+          const appError = errorHandler.handleError(error, 'add-custom-model');
+          throw appError;
+        }
+      }
+    );
+
+    ipcMain.handle('get-model-configurations', async (event, providerId) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return visionModule.getModelConfigurations(providerId);
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'get-model-configurations');
+        throw appError;
+      }
+    });
+
+    ipcMain.handle('remove-custom-model', async (event, providerId, modelName) => {
+      try {
+        const { VisionAnalysisModule } = await import('../modules/VisionAnalysisModule');
+        const visionModule = new VisionAnalysisModule();
+        return await visionModule.removeCustomModel(providerId, modelName);
+      } catch (error) {
+        const appError = errorHandler.handleError(error, 'remove-custom-model');
+        throw appError;
       }
     });
   }

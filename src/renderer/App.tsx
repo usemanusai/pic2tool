@@ -21,10 +21,10 @@ const App: React.FC = () => {
     isProcessing: false,
     progress: {
       percent: 0,
-      status: 'Ready'
+      status: 'Ready',
     },
     generatedCode: null,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -33,53 +33,53 @@ const App: React.FC = () => {
       // Recording events
       window.electronAPI.onRecordingStarted((data: any) => {
         console.log('Recording started:', data);
-        setAppState(prev => ({
+        setAppState((prev) => ({
           ...prev,
           isRecording: true,
           error: null,
-          progress: { percent: 0, status: 'Recording...' }
+          progress: { percent: 0, status: 'Recording...' },
         }));
       });
 
       window.electronAPI.onRecordingStopped((data: any) => {
         console.log('Recording stopped:', data);
-        setAppState(prev => ({
+        setAppState((prev) => ({
           ...prev,
           isRecording: false,
-          progress: { percent: 0, status: 'Recording complete. Ready to process.' }
+          progress: { percent: 0, status: 'Recording complete. Ready to process.' },
         }));
       });
 
       // Processing events
       window.electronAPI.onProcessingProgress((data: any) => {
         console.log('Processing progress:', data);
-        setAppState(prev => ({
+        setAppState((prev) => ({
           ...prev,
           isProcessing: true,
           progress: {
             percent: data.percent,
-            status: data.status
-          }
+            status: data.status,
+          },
         }));
       });
 
       window.electronAPI.onGenerationComplete((data: any) => {
         console.log('Generation complete:', data);
-        setAppState(prev => ({
+        setAppState((prev) => ({
           ...prev,
           isProcessing: false,
           generatedCode: data.code,
-          progress: { percent: 100, status: 'Code generation complete!' }
+          progress: { percent: 100, status: 'Code generation complete!' },
         }));
       });
 
       window.electronAPI.onProcessingError((data: any) => {
         console.error('Processing error:', data);
-        setAppState(prev => ({
+        setAppState((prev) => ({
           ...prev,
           isProcessing: false,
           error: data.error,
-          progress: { percent: 0, status: 'Error occurred' }
+          progress: { percent: 0, status: 'Error occurred' },
         }));
       });
     };
@@ -98,13 +98,13 @@ const App: React.FC = () => {
 
   const handleStartRecording = async (config: any) => {
     try {
-      setAppState(prev => ({ ...prev, error: null }));
+      setAppState((prev) => ({ ...prev, error: null }));
       await window.electronAPI.startRecording(config);
     } catch (error) {
       console.error('Failed to start recording:', error);
-      setAppState(prev => ({
+      setAppState((prev) => ({
         ...prev,
-        error: `Failed to start recording: ${error.message}`
+        error: `Failed to start recording: ${error.message}`,
       }));
     }
   };
@@ -114,41 +114,41 @@ const App: React.FC = () => {
       await window.electronAPI.stopRecording();
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      setAppState(prev => ({
+      setAppState((prev) => ({
         ...prev,
-        error: `Failed to stop recording: ${error.message}`
+        error: `Failed to stop recording: ${error.message}`,
       }));
     }
   };
 
   const handleProcessVideo = async (videoPath: string, projectPath: string) => {
     try {
-      setAppState(prev => ({ 
-        ...prev, 
+      setAppState((prev) => ({
+        ...prev,
         error: null,
         generatedCode: null,
-        progress: { percent: 0, status: 'Starting video processing...' }
+        progress: { percent: 0, status: 'Starting video processing...' },
       }));
       await window.electronAPI.processVideo(videoPath, projectPath);
     } catch (error) {
       console.error('Failed to process video:', error);
-      setAppState(prev => ({
+      setAppState((prev) => ({
         ...prev,
         error: `Failed to process video: ${error.message}`,
-        isProcessing: false
+        isProcessing: false,
       }));
     }
   };
 
   const handleClearError = () => {
-    setAppState(prev => ({ ...prev, error: null }));
+    setAppState((prev) => ({ ...prev, error: null }));
   };
 
   const handleClearResults = () => {
-    setAppState(prev => ({
+    setAppState((prev) => ({
       ...prev,
       generatedCode: null,
-      progress: { percent: 0, status: 'Ready' }
+      progress: { percent: 0, status: 'Ready' },
     }));
   };
 

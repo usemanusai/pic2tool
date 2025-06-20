@@ -3,6 +3,8 @@ import * as log from 'electron-log';
 import { FrameInfo } from './VideoProcessingModule';
 import { APIKeyPoolManager, APIKey } from './APIKeyPoolManager';
 import { FreeVisionAPIProvider, VisionAnalysisResult } from './FreeVisionAPIProvider';
+import { ModelManagementService, ModelValidationResult } from './ModelManagementService';
+import { EnhancedVisionProviderManager } from './EnhancedVisionProviderManager';
 import { ErrorHandler } from '../shared/ErrorHandler';
 
 export interface VisionService {
@@ -64,36 +66,51 @@ export interface AnalysisOptions {
 export class VisionAnalysisModule {
   private keyPoolManager: APIKeyPoolManager;
   private freeProvider: FreeVisionAPIProvider;
+  private modelManager: ModelManagementService;
+  public enhancedProviderManager: EnhancedVisionProviderManager; // Made public for IPC access
   private visionServices: Map<APIKey['provider'], VisionService> = new Map();
   private retryDelays: Map<string, number> = new Map();
+  private selectedModels: Map<string, string> = new Map(); // providerId -> modelName
 
   constructor() {
-    log.info('VisionAnalysisModule initialized with multi-API key rotation and free tier optimization');
+    log.info(
+      'VisionAnalysisModule initialized with multi-API key rotation, free tier optimization, and dynamic model support'
+    );
     this.keyPoolManager = new APIKeyPoolManager();
     this.freeProvider = new FreeVisionAPIProvider();
+    this.modelManager = new ModelManagementService();
+    this.enhancedProviderManager = new EnhancedVisionProviderManager();
     this.initializeServices();
+    this.loadSelectedModels();
   }
 
   private initializeServices(): void {
-    // Initialize vision services with new architecture
-    this.visionServices.set('openai', new OpenAIVisionService());
+    // Initialize vision services with new architecture and model support
+    this.visionServices.set(
+      'openai',
+      new OpenAIVisionService((providerId) => this.getSelectedModel(providerId))
+    );
     this.visionServices.set('google', new GoogleVisionService());
     this.visionServices.set('azure', new AzureVisionService());
     this.visionServices.set('aws', new AWSVisionService());
     this.visionServices.set('huggingface', new HuggingFaceVisionService());
 
-    log.info(`Initialized ${this.visionServices.size} vision services`);
+    log.info(`Initialized ${this.visionServices.size} vision services with dynamic model support`);
   }
 
   /**
    * Add API key to the pool
    */
-  public async addAPIKey(provider: APIKey['provider'], key: string, options?: {
-    name?: string;
-    tier?: 'free' | 'trial' | 'paid';
-    dailyLimit?: number;
-    expiresAt?: Date;
-  }): Promise<string> {
+  public async addAPIKey(
+    provider: APIKey['provider'],
+    key: string,
+    options?: {
+      name?: string;
+      tier?: 'free' | 'trial' | 'paid';
+      dailyLimit?: number;
+      expiresAt?: Date;
+    }
+  ): Promise<string> {
     return await this.keyPoolManager.addAPIKey(provider, key, options);
   }
 
@@ -107,7 +124,7 @@ export class VisionAnalysisModule {
       azure: [],
       aws: [],
       huggingface: [],
-      ollama: []
+      ollama: [],
     };
 
     for (const provider of Object.keys(status) as APIKey['provider'][]) {
@@ -120,12 +137,15 @@ export class VisionAnalysisModule {
   /**
    * Analyze frames with intelligent API key rotation and free tier optimization
    */
-  public async analyzeFrames(frames: FrameInfo[], options: AnalysisOptions = {
-    preferFreeProviders: true,
-    maxRetries: 3,
-    retryDelay: 1000,
-    fallbackToFree: true
-  }): Promise<FrameAnalysis[]> {
+  public async analyzeFrames(
+    frames: FrameInfo[],
+    options: AnalysisOptions = {
+      preferFreeProviders: true,
+      maxRetries: 3,
+      retryDelay: 1000,
+      fallbackToFree: true,
+    }
+  ): Promise<FrameAnalysis[]> {
     try {
       log.info(`Starting analysis of ${frames.length} frames with multi-API rotation`);
 
@@ -143,7 +163,6 @@ export class VisionAnalysisModule {
           // Adaptive delay based on provider type
           const delay = analysis.usedFreeProvider ? 100 : 500;
           await this.delay(delay);
-
         } catch (error) {
           log.error(`Error analyzing frame ${i}:`, error);
 
@@ -155,7 +174,6 @@ export class VisionAnalysisModule {
       log.info(`Completed analysis of ${results.length} frames`);
       this.logAnalysisStatistics(results);
       return results;
-
     } catch (error) {
       log.error('Error in frame analysis:', error);
       throw error;
@@ -165,7 +183,11 @@ export class VisionAnalysisModule {
   /**
    * Analyze single frame with intelligent provider selection and fallback
    */
-  private async analyzeFrameWithFallback(frameBuffer: Buffer, frameInfo: FrameInfo, options: AnalysisOptions): Promise<FrameAnalysis> {
+  private async analyzeFrameWithFallback(
+    frameBuffer: Buffer,
+    frameInfo: FrameInfo,
+    options: AnalysisOptions
+  ): Promise<FrameAnalysis> {
     const startTime = Date.now();
 
     // Try free providers first if preferred
@@ -209,7 +231,12 @@ export class VisionAnalysisModule {
   /**
    * Try a specific provider with retry logic and key rotation
    */
-  private async tryProviderWithRetry(provider: APIKey['provider'], frameBuffer: Buffer, frameInfo: FrameInfo, options: AnalysisOptions): Promise<FrameAnalysis | null> {
+  private async tryProviderWithRetry(
+    provider: APIKey['provider'],
+    frameBuffer: Buffer,
+    frameInfo: FrameInfo,
+    options: AnalysisOptions
+  ): Promise<FrameAnalysis | null> {
     const service = this.visionServices.get(provider);
     if (!service) {
       log.debug(`Service for provider ${provider} not available`);
@@ -224,7 +251,9 @@ export class VisionAnalysisModule {
       }
 
       try {
-        log.debug(`Attempting analysis with ${provider} (key: ${apiKey.name}, attempt: ${attempt + 1})`);
+        log.debug(
+          `Attempting analysis with ${provider} (key: ${apiKey.name}, attempt: ${attempt + 1})`
+        );
 
         const analysis = await service.analyzeFrame(frameBuffer, apiKey.key, options.customPrompt);
         analysis.frameIndex = frameInfo.index;
@@ -236,7 +265,6 @@ export class VisionAnalysisModule {
         this.keyPoolManager.markKeyAsUsed(apiKey.id, true);
 
         return analysis;
-
       } catch (error) {
         log.warn(`Provider ${provider} failed (attempt ${attempt + 1}):`, error);
 
@@ -267,7 +295,10 @@ export class VisionAnalysisModule {
   /**
    * Try free providers
    */
-  private async tryFreeProviders(frameBuffer: Buffer, prompt?: string): Promise<VisionAnalysisResult | null> {
+  private async tryFreeProviders(
+    frameBuffer: Buffer,
+    prompt?: string
+  ): Promise<VisionAnalysisResult | null> {
     try {
       await this.freeProvider.refreshProviderAvailability();
       return await this.freeProvider.analyzeImage(frameBuffer, prompt);
@@ -280,7 +311,11 @@ export class VisionAnalysisModule {
   /**
    * Convert free provider result to FrameAnalysis format
    */
-  private convertFreeResultToFrameAnalysis(result: VisionAnalysisResult, frameInfo: FrameInfo, usedFree: boolean): FrameAnalysis {
+  private convertFreeResultToFrameAnalysis(
+    result: VisionAnalysisResult,
+    frameInfo: FrameInfo,
+    usedFree: boolean
+  ): FrameAnalysis {
     // Parse the description to extract UI elements (basic implementation)
     const elements = this.parseDescriptionForElements(result.description);
 
@@ -294,7 +329,7 @@ export class VisionAnalysisModule {
       provider: result.provider,
       confidence: result.confidence,
       processingTime: result.processingTime,
-      usedFreeProvider: usedFree
+      usedFreeProvider: usedFree,
     };
   }
 
@@ -313,7 +348,7 @@ export class VisionAnalysisModule {
         type: 'button',
         bounds: { x: 0, y: 0, width: 100, height: 30 },
         text: 'Detected button',
-        confidence: 0.6
+        confidence: 0.6,
       });
     }
 
@@ -322,7 +357,7 @@ export class VisionAnalysisModule {
         type: 'input',
         bounds: { x: 0, y: 0, width: 200, height: 25 },
         text: 'Detected input field',
-        confidence: 0.6
+        confidence: 0.6,
       });
     }
 
@@ -337,25 +372,26 @@ export class VisionAnalysisModule {
     const quotedText = description.match(/"([^"]+)"/g) || [];
     const textMatches = description.match(/text[:\s]+"?([^".,\n]+)"?/gi) || [];
 
-    return [...quotedText, ...textMatches].map(text =>
-      text.replace(/^["']|["']$/g, '').trim()
-    ).filter(text => text.length > 0);
+    return [...quotedText, ...textMatches]
+      .map((text) => text.replace(/^["']|["']$/g, '').trim())
+      .filter((text) => text.length > 0);
   }
 
   private isRateLimitError(error: any): boolean {
     const errorMessage = error.message?.toLowerCase() || '';
     const statusCode = error.status || error.response?.status;
 
-    return statusCode === 429 ||
-           errorMessage.includes('rate limit') ||
-           errorMessage.includes('quota') ||
-           errorMessage.includes('too many requests');
+    return (
+      statusCode === 429 ||
+      errorMessage.includes('rate limit') ||
+      errorMessage.includes('quota') ||
+      errorMessage.includes('too many requests')
+    );
   }
 
   private extractRetryAfter(error: any): number | null {
     // Try to extract retry-after header or parse from error message
-    const retryAfter = error.response?.headers?.['retry-after'] ||
-                      error.headers?.['retry-after'];
+    const retryAfter = error.response?.headers?.['retry-after'] || error.headers?.['retry-after'];
 
     if (retryAfter) {
       return parseInt(retryAfter, 10);
@@ -375,12 +411,12 @@ export class VisionAnalysisModule {
       actions: [],
       provider: 'fallback',
       confidence: 0,
-      usedFreeProvider: false
+      usedFreeProvider: false,
     };
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -389,11 +425,12 @@ export class VisionAnalysisModule {
   private logAnalysisStatistics(results: FrameAnalysis[]): void {
     const stats = {
       total: results.length,
-      successful: results.filter(r => r.provider !== 'fallback').length,
-      usedFree: results.filter(r => r.usedFreeProvider).length,
-      usedPaid: results.filter(r => !r.usedFreeProvider && r.provider !== 'fallback').length,
+      successful: results.filter((r) => r.provider !== 'fallback').length,
+      usedFree: results.filter((r) => r.usedFreeProvider).length,
+      usedPaid: results.filter((r) => !r.usedFreeProvider && r.provider !== 'fallback').length,
       avgConfidence: results.reduce((sum, r) => sum + (r.confidence || 0), 0) / results.length,
-      avgProcessingTime: results.reduce((sum, r) => sum + (r.processingTime || 0), 0) / results.length
+      avgProcessingTime:
+        results.reduce((sum, r) => sum + (r.processingTime || 0), 0) / results.length,
     };
 
     log.info('Analysis Statistics:', stats);
@@ -426,7 +463,94 @@ export class VisionAnalysisModule {
   public async removeAPIKey(keyId: string): Promise<boolean> {
     return await this.keyPoolManager.removeAPIKey(keyId);
   }
-}
+
+  /**
+   * Model Management Methods
+   */
+
+  /**
+   * Validate a custom model for a provider
+   */
+  public async validateModel(
+    providerId: string,
+    modelName: string,
+    apiKey?: string
+  ): Promise<ModelValidationResult> {
+    return await this.modelManager.validateModel(providerId, modelName, apiKey);
+  }
+
+  /**
+   * Discover available models for a provider
+   */
+  public async discoverModels(providerId: string, apiKey?: string) {
+    return await this.modelManager.discoverModels(providerId, apiKey);
+  }
+
+  /**
+   * Add a custom model configuration
+   */
+  public async addCustomModel(
+    providerId: string,
+    modelName: string,
+    displayName: string,
+    apiKey?: string
+  ) {
+    return await this.modelManager.addCustomModel(providerId, modelName, displayName, apiKey);
+  }
+
+  /**
+   * Get model configurations for a provider
+   */
+  public getModelConfigurations(providerId: string) {
+    return this.modelManager.getModelConfigurations(providerId);
+  }
+
+  /**
+   * Remove a custom model
+   */
+  public async removeCustomModel(providerId: string, modelName: string): Promise<boolean> {
+    return await this.modelManager.removeCustomModel(providerId, modelName);
+  }
+
+  /**
+   * Set the selected model for a provider
+   */
+  public setSelectedModel(providerId: string, modelName: string): void {
+    this.selectedModels.set(providerId, modelName);
+    this.saveSelectedModels();
+  }
+
+  /**
+   * Get the selected model for a provider
+   */
+  public getSelectedModel(providerId: string): string | undefined {
+    return this.selectedModels.get(providerId);
+  }
+
+  /**
+   * Load selected models from storage
+   */
+  private loadSelectedModels(): void {
+    try {
+      // This would load from settings - simplified for now
+      this.selectedModels.set('openrouter_qwen_free', 'qwen/qwen-2.5-vl-32b-instruct:free');
+      this.selectedModels.set('openai_gpt4o', 'gpt-4o');
+    } catch (error) {
+      log.error('Failed to load selected models:', error);
+    }
+  }
+
+  /**
+   * Save selected models to storage
+   */
+  private saveSelectedModels(): void {
+    try {
+      // This would save to settings - simplified for now
+      log.info('Selected models saved');
+    } catch (error) {
+      log.error('Failed to save selected models:', error);
+    }
+  }
 }
 
 // Enhanced vision service implementations
@@ -436,10 +560,14 @@ class OpenAIVisionService implements VisionService {
   supportsRetry = true;
   maxRetries = 3;
 
+  constructor(private getSelectedModel?: (providerId: string) => string | undefined) {}
+
   async analyzeFrame(frameBuffer: Buffer, apiKey: string, prompt?: string): Promise<FrameAnalysis> {
     try {
       const base64Image = frameBuffer.toString('base64');
-      const analysisPrompt = prompt || `Analyze this screenshot and identify UI elements, cursor position, and any user actions. Return a JSON object with:
+      const analysisPrompt =
+        prompt ||
+        `Analyze this screenshot and identify UI elements, cursor position, and any user actions. Return a JSON object with:
         - elements: array of UI elements with type, bounds (x,y,width,height), text, and confidence
         - cursor: object with x, y, visible, and type
         - text: array of visible text strings
@@ -453,30 +581,30 @@ class OpenAIVisionService implements VisionService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4-vision-preview',
+          model: this.getSelectedModel?.('openai_gpt4o') || 'gpt-4o',
           messages: [
             {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: analysisPrompt
+                  text: analysisPrompt,
                 },
                 {
                   type: 'image_url',
                   image_url: {
-                    url: `data:image/png;base64,${base64Image}`
-                  }
-                }
-              ]
-            }
+                    url: `data:image/png;base64,${base64Image}`,
+                  },
+                },
+              ],
+            },
           ],
           max_tokens: 1500,
-          temperature: 0.1
-        })
+          temperature: 0.1,
+        }),
       });
 
       if (!response.ok) {
@@ -504,9 +632,8 @@ class OpenAIVisionService implements VisionService {
         elements: analysis.elements || [],
         cursor: analysis.cursor || { x: 0, y: 0, visible: false },
         text: analysis.text || [],
-        actions: analysis.actions || []
+        actions: analysis.actions || [],
       };
-
     } catch (error) {
       log.error('OpenAI vision analysis error:', error);
       throw error;
@@ -525,28 +652,33 @@ class GoogleVisionService implements VisionService {
       const base64Image = frameBuffer.toString('base64');
 
       // Use Google Vision API for text detection and object detection
-      const textResponse = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: {
-                content: base64Image
+      const textResponse = await fetch(
+        `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                image: {
+                  content: base64Image,
+                },
+                features: [
+                  { type: 'TEXT_DETECTION', maxResults: 50 },
+                  { type: 'OBJECT_LOCALIZATION', maxResults: 50 },
+                ],
               },
-              features: [
-                { type: 'TEXT_DETECTION', maxResults: 50 },
-                { type: 'OBJECT_LOCALIZATION', maxResults: 50 }
-              ]
-            }
-          ]
-        })
-      });
+            ],
+          }),
+        }
+      );
 
       if (!textResponse.ok) {
-        throw new Error(`Google Vision API error: ${textResponse.status} ${textResponse.statusText}`);
+        throw new Error(
+          `Google Vision API error: ${textResponse.status} ${textResponse.statusText}`
+        );
       }
 
       const data = await textResponse.json();
@@ -564,15 +696,19 @@ class GoogleVisionService implements VisionService {
           const bounds = {
             x: Math.min(...vertices.map((v: any) => v.x || 0)),
             y: Math.min(...vertices.map((v: any) => v.y || 0)),
-            width: Math.max(...vertices.map((v: any) => v.x || 0)) - Math.min(...vertices.map((v: any) => v.x || 0)),
-            height: Math.max(...vertices.map((v: any) => v.y || 0)) - Math.min(...vertices.map((v: any) => v.y || 0))
+            width:
+              Math.max(...vertices.map((v: any) => v.x || 0)) -
+              Math.min(...vertices.map((v: any) => v.x || 0)),
+            height:
+              Math.max(...vertices.map((v: any) => v.y || 0)) -
+              Math.min(...vertices.map((v: any) => v.y || 0)),
           };
 
           elements.push({
             type: 'text',
             bounds,
             text: annotation.description,
-            confidence: 0.9
+            confidence: 0.9,
           });
 
           textStrings.push(annotation.description);
@@ -588,7 +724,7 @@ class GoogleVisionService implements VisionService {
             x: Math.round(vertices[0].x * 1920),
             y: Math.round(vertices[0].y * 1080),
             width: Math.round((vertices[2].x - vertices[0].x) * 1920),
-            height: Math.round((vertices[2].y - vertices[0].y) * 1080)
+            height: Math.round((vertices[2].y - vertices[0].y) * 1080),
           };
 
           let elementType: UIElement['type'] = 'other';
@@ -600,7 +736,7 @@ class GoogleVisionService implements VisionService {
             type: elementType,
             bounds,
             text: obj.name,
-            confidence: obj.score
+            confidence: obj.score,
           });
         });
       }
@@ -611,9 +747,8 @@ class GoogleVisionService implements VisionService {
         elements,
         cursor: { x: 0, y: 0, visible: false }, // Google Vision doesn't detect cursor
         text: textStrings,
-        actions: [] // Google Vision doesn't detect actions directly
+        actions: [], // Google Vision doesn't detect actions directly
       };
-
     } catch (error) {
       log.error('Google vision analysis error:', error);
       throw error;
@@ -635,9 +770,9 @@ class AzureVisionService implements VisionService {
           method: 'POST',
           headers: {
             'Ocp-Apim-Subscription-Key': apiKey,
-            'Content-Type': 'application/octet-stream'
+            'Content-Type': 'application/octet-stream',
           },
-          body: frameBuffer
+          body: frameBuffer,
         }
       );
 
@@ -661,10 +796,10 @@ class AzureVisionService implements VisionService {
               x: obj.rectangle.x,
               y: obj.rectangle.y,
               width: obj.rectangle.w,
-              height: obj.rectangle.h
+              height: obj.rectangle.h,
             },
             text: obj.object,
-            confidence: obj.confidence
+            confidence: obj.confidence,
           });
         });
       }
@@ -679,13 +814,15 @@ class AzureVisionService implements VisionService {
               bounds: {
                 x: Math.min(...line.boundingBox.filter((_: any, i: number) => i % 2 === 0)),
                 y: Math.min(...line.boundingBox.filter((_: any, i: number) => i % 2 === 1)),
-                width: Math.max(...line.boundingBox.filter((_: any, i: number) => i % 2 === 0)) -
-                       Math.min(...line.boundingBox.filter((_: any, i: number) => i % 2 === 0)),
-                height: Math.max(...line.boundingBox.filter((_: any, i: number) => i % 2 === 1)) -
-                        Math.min(...line.boundingBox.filter((_: any, i: number) => i % 2 === 1))
+                width:
+                  Math.max(...line.boundingBox.filter((_: any, i: number) => i % 2 === 0)) -
+                  Math.min(...line.boundingBox.filter((_: any, i: number) => i % 2 === 0)),
+                height:
+                  Math.max(...line.boundingBox.filter((_: any, i: number) => i % 2 === 1)) -
+                  Math.min(...line.boundingBox.filter((_: any, i: number) => i % 2 === 1)),
               },
               text: line.text,
-              confidence: 0.9
+              confidence: 0.9,
             });
           });
         });
@@ -697,9 +834,8 @@ class AzureVisionService implements VisionService {
         elements,
         cursor: { x: 0, y: 0, visible: false },
         text: textStrings,
-        actions: []
+        actions: [],
       };
-
     } catch (error) {
       log.error('Azure vision analysis error:', error);
       throw error;
@@ -743,10 +879,10 @@ class HuggingFaceVisionService implements VisionService {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/octet-stream'
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/octet-stream',
           },
-          body: frameBuffer
+          body: frameBuffer,
         }
       );
 
@@ -770,7 +906,7 @@ class HuggingFaceVisionService implements VisionService {
             type: 'button',
             bounds: { x: 0, y: 0, width: 100, height: 30 },
             text: 'Detected button',
-            confidence: 0.6
+            confidence: 0.6,
           });
         }
       }
@@ -781,9 +917,8 @@ class HuggingFaceVisionService implements VisionService {
         elements,
         cursor: { x: 0, y: 0, visible: false },
         text: textStrings,
-        actions: []
+        actions: [],
       };
-
     } catch (error) {
       log.error('Hugging Face vision analysis error:', error);
       throw error;

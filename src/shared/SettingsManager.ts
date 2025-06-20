@@ -39,17 +39,17 @@ const defaultSettings: AppSettings = {
     skipSimilarFrames: true,
     similarityThreshold: 0.95,
     maxFrames: 1000,
-    outputQuality: 'medium'
+    outputQuality: 'medium',
   },
   ui: {
     theme: 'light',
     autoSave: true,
-    showTips: true
+    showTips: true,
   },
   paths: {
     defaultProjectPath: '',
-    defaultOutputPath: ''
-  }
+    defaultOutputPath: '',
+  },
 };
 
 export class SettingsManager {
@@ -59,7 +59,7 @@ export class SettingsManager {
   constructor() {
     this.store = new Store<AppSettings>({
       defaults: defaultSettings,
-      name: 'app-settings'
+      name: 'app-settings',
     });
 
     this.encryptionAvailable = safeStorage.isEncryptionAvailable();
@@ -71,12 +71,12 @@ export class SettingsManager {
   public getSettings(): AppSettings {
     try {
       const settings = this.store.store;
-      
+
       // Decrypt API keys if encryption is available
       if (this.encryptionAvailable && settings.apiKeys) {
-        settings.apiKeys = settings.apiKeys.map(keyConfig => ({
+        settings.apiKeys = settings.apiKeys.map((keyConfig) => ({
           ...keyConfig,
-          key: this.decryptApiKey(keyConfig.key)
+          key: this.decryptApiKey(keyConfig.key),
         }));
       }
 
@@ -92,9 +92,9 @@ export class SettingsManager {
       // Encrypt API keys if encryption is available
       const settingsToSave = { ...settings };
       if (this.encryptionAvailable && settingsToSave.apiKeys) {
-        settingsToSave.apiKeys = settingsToSave.apiKeys.map(keyConfig => ({
+        settingsToSave.apiKeys = settingsToSave.apiKeys.map((keyConfig) => ({
           ...keyConfig,
-          key: this.encryptApiKey(keyConfig.key)
+          key: this.encryptApiKey(keyConfig.key),
         }));
       }
 
@@ -110,18 +110,18 @@ export class SettingsManager {
     try {
       const settings = this.getSettings();
       const id = Date.now().toString();
-      
+
       const newApiKey: APIKeyConfig = {
         id,
         service,
         key,
         enabled: true,
-        name: name || `${service.toUpperCase()} Key`
+        name: name || `${service.toUpperCase()} Key`,
       };
 
       settings.apiKeys.push(newApiKey);
       this.saveSettings(settings);
-      
+
       return id;
     } catch (error) {
       log.error('Error adding API key:', error);
@@ -132,7 +132,7 @@ export class SettingsManager {
   public removeApiKey(id: string): void {
     try {
       const settings = this.getSettings();
-      settings.apiKeys = settings.apiKeys.filter(key => key.id !== id);
+      settings.apiKeys = settings.apiKeys.filter((key) => key.id !== id);
       this.saveSettings(settings);
     } catch (error) {
       log.error('Error removing API key:', error);
@@ -143,8 +143,8 @@ export class SettingsManager {
   public updateApiKey(id: string, updates: Partial<APIKeyConfig>): void {
     try {
       const settings = this.getSettings();
-      const keyIndex = settings.apiKeys.findIndex(key => key.id === id);
-      
+      const keyIndex = settings.apiKeys.findIndex((key) => key.id === id);
+
       if (keyIndex === -1) {
         throw new Error(`API key with id ${id} not found`);
       }
@@ -159,7 +159,7 @@ export class SettingsManager {
 
   public getEnabledApiKeys(): APIKeyConfig[] {
     const settings = this.getSettings();
-    return settings.apiKeys.filter(key => key.enabled && key.key.trim() !== '');
+    return settings.apiKeys.filter((key) => key.enabled && key.key.trim() !== '');
   }
 
   public updateProcessingSettings(updates: Partial<ProcessingSettings>): void {
@@ -211,10 +211,10 @@ export class SettingsManager {
       // Remove sensitive data for export
       const exportData = {
         ...settings,
-        apiKeys: settings.apiKeys.map(key => ({
+        apiKeys: settings.apiKeys.map((key) => ({
           ...key,
-          key: '***REDACTED***'
-        }))
+          key: '***REDACTED***',
+        })),
       };
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
@@ -226,7 +226,7 @@ export class SettingsManager {
   public importSettings(settingsJson: string): void {
     try {
       const importedSettings = JSON.parse(settingsJson);
-      
+
       // Validate the imported settings structure
       if (!this.validateSettings(importedSettings)) {
         throw new Error('Invalid settings format');
@@ -236,7 +236,7 @@ export class SettingsManager {
       const currentSettings = this.getSettings();
       const newSettings = {
         ...importedSettings,
-        apiKeys: currentSettings.apiKeys
+        apiKeys: currentSettings.apiKeys,
       };
 
       this.saveSettings(newSettings);
@@ -249,7 +249,7 @@ export class SettingsManager {
 
   private encryptApiKey(key: string): string {
     if (!this.encryptionAvailable) return key;
-    
+
     try {
       const encrypted = safeStorage.encryptString(key);
       return encrypted.toString('base64');
@@ -261,7 +261,7 @@ export class SettingsManager {
 
   private decryptApiKey(encryptedKey: string): string {
     if (!this.encryptionAvailable) return encryptedKey;
-    
+
     try {
       const buffer = Buffer.from(encryptedKey, 'base64');
       return safeStorage.decryptString(buffer);
@@ -282,6 +282,25 @@ export class SettingsManager {
       );
     } catch {
       return false;
+    }
+  }
+
+  // Enhanced methods for new functionality
+  public get(key: string): any {
+    try {
+      return this.store.get(key);
+    } catch (error) {
+      log.error('Error getting setting:', error);
+      return undefined;
+    }
+  }
+
+  public set(key: string, value: any): void {
+    try {
+      this.store.set(key, value);
+    } catch (error) {
+      log.error('Error setting value:', error);
+      throw error;
     }
   }
 }
