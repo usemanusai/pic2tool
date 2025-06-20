@@ -79,6 +79,20 @@ const electronAPI = {
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
   showItemInFolder: (fullPath: string) => ipcRenderer.invoke('show-item-in-folder', fullPath),
 
+  // Global Shortcuts
+  getShortcutConfig: () => ipcRenderer.invoke('get-shortcut-config'),
+  updateShortcut: (shortcutType: string, newShortcut: string) => ipcRenderer.invoke('update-shortcut', shortcutType, newShortcut),
+  testShortcut: (accelerator: string) => ipcRenderer.invoke('test-shortcut', accelerator),
+  getRegisteredShortcuts: () => ipcRenderer.invoke('get-registered-shortcuts'),
+
+  // Global shortcut event listeners
+  onShortcutNotification: (callback: (data: any) => void) => {
+    ipcRenderer.on('shortcut-notification', (event, data) => callback(data));
+  },
+  onShortcutConflict: (callback: (data: any) => void) => {
+    ipcRenderer.on('shortcut-conflict', (event, data) => callback(data));
+  },
+
   // Utility functions
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel);

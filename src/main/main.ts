@@ -10,6 +10,7 @@ import { VideoProcessingModule } from '../modules/VideoProcessingModule';
 import { VisionAnalysisModule } from '../modules/VisionAnalysisModule';
 import { ActionSequenceModule } from '../modules/ActionSequenceModule';
 import { CodeGenerationModule } from '../modules/CodeGenerationModule';
+import { GlobalShortcutManager } from '../modules/GlobalShortcutManager';
 
 // Configure logging
 log.transports.file.level = 'info';
@@ -25,6 +26,7 @@ class AutomatedDevelopmentRecorder {
   private visionAnalysisModule: VisionAnalysisModule;
   private actionSequenceModule: ActionSequenceModule;
   private codeGenerationModule: CodeGenerationModule;
+  private globalShortcutManager: GlobalShortcutManager;
 
   constructor() {
     this.recordingModule = new RecordingModule();
@@ -32,6 +34,12 @@ class AutomatedDevelopmentRecorder {
     this.visionAnalysisModule = new VisionAnalysisModule();
     this.actionSequenceModule = new ActionSequenceModule();
     this.codeGenerationModule = new CodeGenerationModule();
+
+    // Initialize global shortcut manager with callbacks
+    this.globalShortcutManager = new GlobalShortcutManager({
+      onRecordingToggle: this.handleGlobalRecordingToggle.bind(this),
+      onShortcutConflict: this.handleShortcutConflict.bind(this)
+    });
 
     this.setupIpcHandlers();
   }
@@ -87,9 +95,103 @@ class AutomatedDevelopmentRecorder {
     });
 
     log.info('Main window created successfully');
+
+    // Initialize global shortcuts after window is created
+    await this.initializeGlobalShortcuts();
+  }
+
+  private async initializeGlobalShortcuts(): Promise<void> {
+    try {
+      await this.globalShortcutManager.initialize();
+      log.info('✅ Global shortcuts initialized');
+    } catch (error) {
+      log.error('❌ Failed to initialize global shortcuts:', error);
+      // Don't throw error - app should continue without shortcuts
+    }
+  }
+
+  private async handleGlobalRecordingToggle(): Promise<void> {
+    try {
+      log.info('🎹 Global recording toggle triggered');
+
+      if (this.recordingModule.isCurrentlyRecording()) {
+        log.info('⏹️ Stopping recording via global shortcut');
+        const result = await this.recordingModule.stopRecording();
+        this.sendToRenderer('recording-stopped', result);
+        this.sendToRenderer('shortcut-notification', {
+          message: 'Recording stopped via keyboard shortcut',
+          type: 'success'
+        });
+      } else {
+        log.info('🎬 Starting recording via global shortcut');
+        // Use default recording config for global shortcut
+        const defaultConfig = {
+          sourceId: 'test', // Use test source for now
+          quality: 'medium' as const
+        };
+        const result = await this.recordingModule.startRecording(defaultConfig);
+        this.sendToRenderer('recording-started', result);
+        this.sendToRenderer('shortcut-notification', {
+          message: 'Recording started via keyboard shortcut',
+          type: 'success'
+        });
+      }
+    } catch (error) {
+      log.error('❌ Error handling global recording toggle:', error);
+      this.sendToRenderer('shortcut-notification', {
+        message: `Recording error: ${error instanceof Error ? error.message : String(error)}`,
+        type: 'error'
+      });
+    }
+  }
+
+  private handleShortcutConflict(shortcut: string, error: string): void {
+    log.warn('⚠️ Shortcut conflict:', shortcut, error);
+    this.sendToRenderer('shortcut-conflict', {
+      shortcut,
+      error,
+      alternatives: this.globalShortcutManager.getRegisteredShortcuts()
+    });
   }
 
   private setupIpcHandlers(): void {
+    // Global shortcut handlers
+    ipcMain.handle('get-shortcut-config', async () => {
+      try {
+        return this.globalShortcutManager.getShortcutConfig();
+      } catch (error) {
+        log.error('Error getting shortcut config:', error);
+        throw error;
+      }
+    });
+
+    ipcMain.handle('update-shortcut', async (event, shortcutType, newShortcut) => {
+      try {
+        return this.globalShortcutManager.updateShortcut(shortcutType, newShortcut);
+      } catch (error) {
+        log.error('Error updating shortcut:', error);
+        throw error;
+      }
+    });
+
+    ipcMain.handle('test-shortcut', async (event, accelerator) => {
+      try {
+        return await this.globalShortcutManager.testShortcut(accelerator);
+      } catch (error) {
+        log.error('Error testing shortcut:', error);
+        throw error;
+      }
+    });
+
+    ipcMain.handle('get-registered-shortcuts', async () => {
+      try {
+        return this.globalShortcutManager.getRegisteredShortcuts();
+      } catch (error) {
+        log.error('Error getting registered shortcuts:', error);
+        throw error;
+      }
+    });
+
     // Recording handlers
     ipcMain.handle('start-recording', async (event, config) => {
       try {
@@ -482,6 +584,18 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
+  }
+});
+
+app.on('before-quit', () => {
+  // Clean up global shortcuts before quitting
+  try {
+    const recorder = new AutomatedDevelopmentRecorder();
+    if (recorder['globalShortcutManager']) {
+      recorder['globalShortcutManager'].destroy();
+    }
+  } catch (error) {
+    log.error('Error cleaning up global shortcuts:', error);
   }
 });
 

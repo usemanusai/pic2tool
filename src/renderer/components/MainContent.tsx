@@ -4,6 +4,7 @@ import RecordingPanel from './RecordingPanel';
 import ProcessingPanel from './ProcessingPanel';
 import CodeDisplay from './CodeDisplay';
 import ConfigPanel from './ConfigPanel';
+import ShortcutConfigPanel from './ShortcutConfigPanel';
 
 interface MainContentProps {
   appState: AppState;
@@ -22,7 +23,7 @@ const MainContent: React.FC<MainContentProps> = ({
   onClearError,
   onClearResults,
 }) => {
-  const [activeTab, setActiveTab] = useState<'record' | 'process' | 'config'>('record');
+  const [activeTab, setActiveTab] = useState<'record' | 'process' | 'config' | 'shortcuts'>('record');
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -40,6 +41,8 @@ const MainContent: React.FC<MainContentProps> = ({
         );
       case 'config':
         return <ConfigPanel />;
+      case 'shortcuts':
+        return <ShortcutConfigPanel />;
       default:
         return null;
     }
@@ -81,6 +84,12 @@ const MainContent: React.FC<MainContentProps> = ({
               onClick={() => setActiveTab('config')}
             >
               🔧 Config
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'shortcuts' ? 'active' : ''}`}
+              onClick={() => setActiveTab('shortcuts')}
+            >
+              🎹 Shortcuts
             </button>
           </div>
 

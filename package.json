@@ -47,6 +47,7 @@
     "electron-log": "^5.4.1",
     "electron-store": "^8.2.0",
     "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
     "jimp": "^1.6.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

@@ -4,6 +4,9 @@ import * as log from 'electron-log';
 import { Jimp } from 'jimp';
 import { spawn } from 'child_process';
 import ffmpegPath from 'ffmpeg-static';
+import ffprobeStatic from 'ffprobe-static';
+
+const ffprobePath = ffprobeStatic.path;
 
 export interface FrameInfo {
   path: string;
@@ -29,15 +32,43 @@ export class VideoProcessingModule {
 
   constructor() {
     log.info('VideoProcessingModule initialized');
-    this.setupFFmpeg();
+    this.setupFFmpegBinaries();
   }
 
-  private setupFFmpeg(): void {
-    // ffmpeg-static provides the path to the static binary
+  private setupFFmpegBinaries(): void {
+    // Check ffmpeg-static binary
     if (ffmpegPath) {
-      log.info('FFmpeg static binary available at:', ffmpegPath);
+      log.info('✅ FFmpeg static binary available at:', ffmpegPath);
     } else {
-      log.warn('FFmpeg static binary not available');
+      log.error('❌ FFmpeg static binary not available');
+    }
+
+    // Check ffprobe-static binary
+    if (ffprobePath) {
+      log.info('✅ FFprobe static binary available at:', ffprobePath);
+    } else {
+      log.error('❌ FFprobe static binary not available');
+    }
+
+    // Verify binaries exist on filesystem
+    this.verifyBinaries();
+  }
+
+  private verifyBinaries(): void {
+    try {
+      if (ffmpegPath && fs.existsSync(ffmpegPath)) {
+        log.info('✅ FFmpeg binary verified on filesystem');
+      } else {
+        log.error('❌ FFmpeg binary not found on filesystem:', ffmpegPath);
+      }
+
+      if (ffprobePath && fs.existsSync(ffprobePath)) {
+        log.info('✅ FFprobe binary verified on filesystem');
+      } else {
+        log.error('❌ FFprobe binary not found on filesystem:', ffprobePath);
+      }
+    } catch (error) {
+      log.error('❌ Error verifying binaries:', error);
     }
   }
 
@@ -85,12 +116,20 @@ export class VideoProcessingModule {
 
   private async getVideoInfo(videoPath: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      if (!ffmpegPath) {
-        reject(new Error('FFmpeg not available'));
+      if (!ffprobePath) {
+        reject(new Error('FFprobe not available - please ensure ffprobe-static is installed'));
         return;
       }
 
-      const ffprobe = spawn(ffmpegPath.replace('ffmpeg', 'ffprobe'), [
+      if (!fs.existsSync(videoPath)) {
+        reject(new Error(`Video file not found: ${videoPath}`));
+        return;
+      }
+
+      log.info('🔍 Getting video info using FFprobe:', ffprobePath);
+      log.info('📹 Video file:', videoPath);
+
+      const ffprobe = spawn(ffprobePath, [
         '-v', 'quiet',
         '-print_format', 'json',
         '-show_format',
@@ -113,17 +152,22 @@ export class VideoProcessingModule {
         if (code === 0) {
           try {
             const metadata = JSON.parse(output);
+            log.info('✅ Video metadata extracted successfully');
             resolve(metadata);
           } catch (parseError) {
+            log.error('❌ Failed to parse FFprobe output:', parseError);
             reject(new Error(`Failed to parse ffprobe output: ${parseError}`));
           }
         } else {
-          reject(new Error(`ffprobe failed with code ${code}: ${errorOutput}`));
+          log.error('❌ FFprobe failed with code:', code);
+          log.error('❌ FFprobe error output:', errorOutput);
+          reject(new Error(`FFprobe failed with code ${code}: ${errorOutput}`));
         }
       });
 
       ffprobe.on('error', (error) => {
-        reject(error);
+        log.error('❌ FFprobe process error:', error);
+        reject(new Error(`FFprobe process error: ${error.message}`));
       });
     });
   }
@@ -135,9 +179,19 @@ export class VideoProcessingModule {
   ): Promise<FrameInfo[]> {
     return new Promise((resolve, reject) => {
       if (!ffmpegPath) {
-        reject(new Error('FFmpeg not available'));
+        reject(new Error('FFmpeg not available - please ensure ffmpeg-static is installed'));
         return;
       }
+
+      if (!fs.existsSync(videoPath)) {
+        reject(new Error(`Video file not found: ${videoPath}`));
+        return;
+      }
+
+      log.info('🎬 Extracting frames using FFmpeg:', ffmpegPath);
+      log.info('📹 Video file:', videoPath);
+      log.info('📁 Output directory:', outputDir);
+      log.info('🎯 Frame rate:', frameRate);
 
       const frames: FrameInfo[] = [];
       const outputPattern = path.join(outputDir, 'frame_%04d.png');
