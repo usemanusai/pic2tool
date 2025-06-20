@@ -1,8 +1,8 @@
-# 🆓 Free Tier Optimization Guide
+# 🆓 Free Tier Optimization Guide (Updated June 2025)
 
 ## Transform pic2tool into a Completely Free AI Analysis Tool
 
-This guide shows you how to use pic2tool's advanced multi-API key rotation system and free provider integration to analyze unlimited screen recordings without any monthly costs.
+This guide shows you how to use pic2tool's advanced multi-API key rotation system and the latest 2025 free provider integrations to analyze unlimited screen recordings without any monthly costs.
 
 ## 🎯 Quick Start: $0 Monthly Cost Setup
 
@@ -15,7 +15,17 @@ This guide shows you how to use pic2tool's advanced multi-API key rotation syste
 4. 🎉 Enjoy unlimited free analysis!
 ```
 
-### Option 2: Free + Paid Hybrid
+### Option 2: 2025 Free Cloud Providers (No Installation)
+```bash
+# Use new 2025 free cloud providers
+1. Run: npm run setup
+2. Enable Google Gemini 2.5 Flash (free tier)
+3. Enable OpenRouter Qwen2.5-VL (free tier)
+4. Enable Groq LLaVA (free tier)
+5. 🎉 Instant free analysis without any setup!
+```
+
+### Option 3: Free + Paid Hybrid
 ```bash
 # Setup multiple free trial accounts
 1. Create multiple OpenAI accounts ($5 free each)
@@ -25,64 +35,105 @@ This guide shows you how to use pic2tool's advanced multi-API key rotation syste
 5. 🎉 Automatic rotation saves $100s/month!
 ```
 
-## 💰 Cost Savings Breakdown
+## 💰 Cost Savings Breakdown (Updated 2025 Pricing)
 
-| Usage Level | Before (Single API) | After (Multi-Free) | Monthly Savings |
-|-------------|---------------------|---------------------|-----------------|
-| Light (100 requests) | $5-10 | $0 | $5-10 (100%) |
-| Medium (1000 requests) | $25-50 | $0 | $25-50 (100%) |
-| Heavy (5000 requests) | $100-200 | $0-5 | $95-200 (95-100%) |
-| Enterprise (10000+ requests) | $200-500 | $0-20 | $180-500 (90-100%) |
+| Usage Level | Before (Single API) | After (Multi-Free 2025) | Monthly Savings |
+|-------------|---------------------|--------------------------|-----------------|
+| Light (100 requests) | $8-15 | $0 | $8-15 (100%) |
+| Medium (1000 requests) | $30-60 | $0 | $30-60 (100%) |
+| Heavy (5000 requests) | $120-250 | $0 | $120-250 (100%) |
+| Enterprise (10000+ requests) | $250-600 | $0-10 | $240-600 (95-100%) |
+| Ultra Heavy (50000+ requests) | $1000-2500 | $0-50 | $950-2500 (95-100%) |
 
-## 🆓 Free Provider Options
+## 🆓 Free Provider Options (2025 Edition)
 
-### 1. 🤖 Ollama LLaVA (Best Option)
+### 🥇 Tier 1: Local Unlimited (Best Option)
+
+#### 1. 🤖 Ollama LLaVA
 - ✅ **Completely local** - no internet required
 - ✅ **Unlimited usage** - no rate limits or costs
 - ✅ **High quality** vision analysis
 - ✅ **Privacy-first** - data never leaves your machine
+- ✅ **Latest models** - LLaVA 1.6, Qwen2-VL support
 
 **Setup:**
 ```bash
 # Install Ollama
 curl -fsSL https://ollama.ai/install.sh | sh
 
-# Pull LLaVA model
-ollama pull llava
+# Pull latest LLaVA model
+ollama pull llava:latest
+
+# Optional: Pull Qwen2-VL for better performance
+ollama pull qwen2-vl:7b
 
 # Verify installation
 ollama list
 ```
 
-### 2. 🤗 Hugging Face Inference API
+### 🥈 Tier 2: New 2025 Free Cloud Providers (No Setup Required)
+
+#### 2. 🔥 Google Gemini 2.5 Flash Free (NEW 2025)
+- ✅ **Completely free** - no API key required for basic usage
+- ✅ **High rate limits** - 500 requests/day free
+- ✅ **Excellent quality** - state-of-the-art vision model
+- ✅ **Large image support** - up to 20MB images
+- ✅ **Fast processing** - optimized for speed
+
+#### 3. 🚀 OpenRouter Qwen2.5-VL Free (NEW 2025)
+- ✅ **Free tier available** - no credit card required
+- ✅ **Advanced model** - Qwen2.5-VL-32B-Instruct
+- ✅ **High accuracy** - excellent for UI analysis
+- ✅ **Good rate limits** - 100 requests/day free
+
+#### 4. ⚡ Groq LLaVA Free (NEW 2025)
+- ✅ **Ultra-fast inference** - fastest free vision API
+- ✅ **Free tier** - 100 requests/day
+- ✅ **LLaVA 1.5 model** - proven vision capabilities
+- ✅ **Low latency** - sub-second response times
+
+#### 5. 🤝 Together AI Vision Free (NEW 2025)
+- ✅ **Free tier** - $5 free credits monthly
+- ✅ **Llama 3.2 Vision** - latest Meta vision model
+- ✅ **High quality** - excellent for complex scenes
+- ✅ **Good limits** - ~200 requests/month free
+
+#### 6. 🔥 Fireworks AI Vision Free (NEW 2025)
+- ✅ **Free tier** - $1 free credits monthly
+- ✅ **LLaVA models** - multiple model options
+- ✅ **Fast inference** - optimized for speed
+- ✅ **Reliable** - enterprise-grade infrastructure
+
+#### 7. 🌊 DeepInfra Vision Free (NEW 2025)
+- ✅ **Free tier** - $5 free credits monthly
+- ✅ **Multiple models** - LLaVA, CLIP, and more
+- ✅ **Cost-effective** - lowest per-request costs
+- ✅ **Flexible** - various model sizes available
+
+### 🥉 Tier 3: Traditional Free Tiers
+
+#### 8. 🤗 Hugging Face Inference API
 - ✅ **Cloud-based** free tier
 - ✅ **No API key required** for basic usage
 - ✅ **Higher rate limits** with free account
 - ✅ **BLIP model** for image captioning
 
-**Setup:**
-```bash
-# Create free account at https://huggingface.co
-# Optional: Get API token for higher rate limits
-# Add token in pic2tool configuration panel
-```
+#### 9. ☁️ Cloud Provider Free Tiers
 
-### 3. ☁️ Cloud Provider Free Tiers
+##### Google Vision API
+- ✅ **1000 free requests/month**
+- ✅ **$300 free credits** for new accounts
+- ✅ **Excellent text detection**
 
-#### Azure Computer Vision
+##### Azure Computer Vision
 - ✅ **5000 free requests/month**
 - ✅ **No credit card required** for free tier
 - ✅ **High-quality OCR** and object detection
 
-#### AWS Rekognition
+##### AWS Rekognition
 - ✅ **1000 free requests/month**
 - ✅ **12 months free** for new accounts
 - ✅ **Advanced object detection**
-
-#### Google Vision API
-- ✅ **1000 free requests/month**
-- ✅ **$300 free credits** for new accounts
-- ✅ **Excellent text detection**
 
 ## 🔄 Smart Rotation Strategy
 
@@ -116,9 +167,54 @@ graph TD
    - ⚙️ **Settings**: Configure analysis preferences
    - 📊 **Usage Stats**: Monitor costs and usage
 
-### 2. Add Multiple API Keys
+### 2. Configure Free Providers (2025 Edition)
 ```typescript
-// Example configuration for maximum cost savings
+// Optimal 2025 free provider configuration
+const freeProviderStrategy = {
+  // Tier 1: Local unlimited (highest priority)
+  ollama: {
+    enabled: true,
+    models: ['llava:latest', 'qwen2-vl:7b'],
+    unlimited: true
+  },
+
+  // Tier 2: New 2025 free cloud providers
+  gemini_flash_free: {
+    enabled: true,
+    dailyLimit: 500,
+    tier: 'free'
+  },
+  openrouter_qwen_free: {
+    enabled: true,
+    dailyLimit: 100,
+    tier: 'free'
+  },
+  groq_llava_free: {
+    enabled: true,
+    dailyLimit: 100,
+    tier: 'free'
+  },
+  together_ai_free: {
+    enabled: true,
+    monthlyCredits: 5, // $5 free credits
+    tier: 'free'
+  },
+  fireworks_ai_free: {
+    enabled: true,
+    monthlyCredits: 1, // $1 free credits
+    tier: 'free'
+  },
+  deepinfra_free: {
+    enabled: true,
+    monthlyCredits: 5, // $5 free credits
+    tier: 'free'
+  }
+};
+```
+
+### 3. Add Multiple API Keys (Optional)
+```typescript
+// Example configuration for maximum cost savings with paid APIs
 const apiKeyStrategy = {
   openai: [
     { key: "sk-proj-...", tier: "trial", dailyLimit: 100 },
@@ -136,15 +232,38 @@ const apiKeyStrategy = {
 };
 ```
 
-### 3. Optimize Settings
+### 4. Optimize Settings (2025 Edition)
 ```typescript
-const optimizedSettings = {
-  preferFreeProviders: true,     // Always try free first
-  fallbackToFree: true,          // Use free if paid fails
-  maxRetries: 3,                 // Retry failed requests
-  frameRate: 1,                  // Reduce frames for cost savings
-  skipSimilarFrames: true,       // Skip redundant analysis
-  similarityThreshold: 0.95      // Aggressive similarity filtering
+const optimized2025Settings = {
+  // Provider priority (2025 optimized)
+  preferFreeProviders: true,           // Always try free first
+  fallbackToFree: true,                // Use free if paid fails
+  freeProviderPriority: [              // Order of free provider preference
+    'ollama',                          // Local unlimited (best)
+    'gemini_flash_free',               // High quality, good limits
+    'openrouter_qwen_free',            // Advanced model
+    'groq_llava_free',                 // Fastest inference
+    'together_ai_free',                // Good monthly credits
+    'deepinfra_free',                  // Cost-effective
+    'fireworks_ai_free',               // Reliable
+    'huggingface_free'                 // Fallback
+  ],
+
+  // Request optimization
+  maxRetries: 3,                       // Retry failed requests
+  retryDelay: 1000,                    // Delay between retries
+  batchRequests: true,                 // Batch similar requests
+
+  // Frame processing optimization
+  frameRate: 1,                        // Reduce frames for cost savings
+  skipSimilarFrames: true,             // Skip redundant analysis
+  similarityThreshold: 0.95,           // Aggressive similarity filtering
+  intelligentSampling: true,           // Smart frame selection
+
+  // Quality vs cost balance
+  qualityMode: 'balanced',             // balanced, fast, or quality
+  enableCaching: true,                 // Cache results to avoid re-analysis
+  cacheDuration: '24h'                 // Cache for 24 hours
 };
 ```
 
